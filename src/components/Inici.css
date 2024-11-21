@@ -1,7 +1,30 @@
-.categories {
-    background-color: aqua;
+.inici {
+
 }
 
-.icones{
-    background-color: aqua;
+.categories {
+    background-color: rgba(52, 87, 122, 0.678);
+    display: flex;
+    justify-content: center;  /* Posicionamiento */ 
+    align-items: center;
+    margin: auto;
+    background: url(../assets/imagenes/inici.png);
+
+    height: 60vh; /* Tamaño del Div */
+    width: 120vh; 
+    
+
 }
+
+.icones {
+    display: flex;
+    justify-content: baseline;
+    background-color: red;
+}
+
+.btn {
+    background-image: url(../assets/imagenes/img_components.png);
+    padding: auto;
+    color: aliceblue;
+}
+

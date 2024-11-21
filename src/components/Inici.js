@@ -1,16 +1,14 @@
 import React from "react";
-import "./Inici.css"
+import "./Inici.css";
+
 
 const Inici = () => {
     return (
-        <div className="inici">
-            <div classname="categories">
-                <div classname="icones">
-                    
+        <div classname="inici">
+            <div className="categories">
+                <div className="icones">
                 </div>
-
             </div>
-
         </div>
     )
 };

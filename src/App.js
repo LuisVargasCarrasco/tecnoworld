@@ -6,8 +6,11 @@ import Inici from "./components/Inici"
 function App() {
   return (
     <div className="App">
-      <Header />  {/* Usamos el componente Header aquí */}
-      <Inici />
+      <div>
+        <Header />  {/* Usamos el componente Header aquí */}
+      </div>
+        <Inici />  {/* Usamos el componente Inici aquí */}
+    
     </div> 
   );
 }
