@@ -6,12 +6,15 @@ import ProductGrid from "./components/ProductGrid";
 import Footer from "./components/Footer";
 import ProductDetails from "./components/ProductDetails";
 import AdminDashboard from "./components/AdminDashboard";
-import Authentication from "./components/Authentication"; // Importa el component d'autenticació
+import Authentication from "./components/Authentication";
+import Cart from "./components/Cart";
+import Checkout from "./components/Checkout";
+import OrderHistory from "./components/OrderHistory";
 import { Box, CssBaseline } from "@mui/material";
- 
+
 const Success = () => <h1>Pagament completat!</h1>;
 const Cancel = () => <h1>El pagament s'ha cancel·lat.</h1>;
- 
+
 const App = () => {
   return (
     <Router>
@@ -19,14 +22,11 @@ const App = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          minHeight: "100vh", // Assegura que el Footer sempre quedi al final
+          minHeight: "100vh",
         }}
       >
-        {/* CssBaseline assegura un estil consistent */}
         <CssBaseline />
-        {/* Barra de navegació */}
         <Navbar />
-        {/* Configuració de rutes */}
         <Routes>
           <Route
             path="/"
@@ -41,13 +41,15 @@ const App = () => {
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/authentication" element={<Authentication />} /> {/* Ruta afegida */}
+          <Route path="/authentication" element={<Authentication />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-history" element={<OrderHistory />} />
         </Routes>
-        {/* Peu de pàgina */}
         <Footer />
       </Box>
     </Router>
   );
 };
- 
+
 export default App;
