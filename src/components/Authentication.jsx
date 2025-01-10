@@ -15,11 +15,12 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom"; // Importa useNavigate para redirecciones
+import { useNavigate } from "react-router-dom";
 
 const Authentication = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSeller, setIsSeller] = useState(false);
   const [error, setError] = useState(null);
@@ -28,10 +29,14 @@ const Authentication = () => {
   const auth = getAuth();
   const db = getFirestore();
   const googleProvider = new GoogleAuthProvider();
-  const navigate = useNavigate(); // Instancia de useNavigate
+  const navigate = useNavigate();
 
   const handleSubmit = async () => {
     setError(null);
+    if (isSignUp && email !== confirmEmail) {
+      setError("Emails do not match");
+      return;
+    }
     try {
       if (isSignUp) {
         const userCredential = await createUserWithEmailAndPassword(
@@ -41,14 +46,12 @@ const Authentication = () => {
         );
         const user = userCredential.user;
 
-        // Guarda el rol del usuario
         await setDoc(doc(db, "User", user.uid), {
           email: user.email,
           role: isSeller ? "seller" : "user",
         });
 
         setUser(user);
-        setIsSeller(isSeller);
       } else {
         const userCredential = await signInWithEmailAndPassword(
           auth,
@@ -57,7 +60,6 @@ const Authentication = () => {
         );
         const user = userCredential.user;
 
-        // Obtiene el rol desde Firestore
         const userDoc = await getDoc(doc(db, "User", user.uid));
         if (userDoc.exists()) {
           const role = userDoc.data().role;
@@ -67,7 +69,6 @@ const Authentication = () => {
         setUser(user);
       }
 
-      // Redirige a la pantalla de inicio tras iniciar sesión
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -80,11 +81,9 @@ const Authentication = () => {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // Guarda el rol del usuario por defecto como "user"
       const userDocRef = doc(db, "User", user.uid);
       await setDoc(userDocRef, { email: user.email, role: "user" }, { merge: true });
 
-      // Comprueba el rol en Firestore
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const role = userDoc.data().role;
@@ -93,7 +92,6 @@ const Authentication = () => {
 
       setUser(user);
 
-      // Redirige a la pantalla de inicio tras iniciar sesión
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -103,7 +101,7 @@ const Authentication = () => {
   const handleSignOut = async () => {
     await signOut(auth);
     setUser(null);
-    setIsSeller(false); // Reinicia isSeller después del cierre de sesión
+    setIsSeller(false);
   };
 
   return (
@@ -148,6 +146,16 @@ const Authentication = () => {
             fullWidth
             sx={{ marginBottom: "15px" }}
           />
+          {isSignUp && (
+            <TextField
+              label="Confirmar Correo Electrónico"
+              type="email"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              fullWidth
+              sx={{ marginBottom: "15px" }}
+            />
+          )}
           <TextField
             label="Contraseña"
             type="password"
