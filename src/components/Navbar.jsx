@@ -12,20 +12,22 @@ import {
 import { Search, ShoppingCart } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
- 
+import { useNavigate } from "react-router-dom";
+
 const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
   const [user, setUser] = useState(null);
+  const [cartCount, setCartCount] = useState(0);
 
   const auth = getAuth();
   const db = getFirestore();
- 
-  // Comprueba si el usuario tiene rol de vendedor
+  const navigate = useNavigate();
+
   useEffect(() => {
     const checkAuth = async () => {
       const currentUser = auth.currentUser;
       setUser(currentUser);
- 
+
       if (currentUser) {
         try {
           const userDoc = await getDoc(doc(db, "User", currentUser.uid));
@@ -40,23 +42,22 @@ const Navbar = () => {
         }
       }
     };
- 
+
     auth.onAuthStateChanged(() => {
       checkAuth();
     });
   }, [auth, db]);
- 
-  // Cierra sesión
+
   const handleSignOut = async () => {
     await signOut(auth);
     setUser(null);
     setIsSeller(false);
+    navigate("/");
   };
- 
+
   return (
     <AppBar position="static" style={{ backgroundColor: "#232f3e" }}>
       <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
-        {/* Logo */}
         <Typography variant="h6" style={{ fontWeight: "bold" }}>
           <Link
             href="/"
@@ -69,8 +70,7 @@ const Navbar = () => {
             Mi Tienda
           </Link>
         </Typography>
- 
-        {/* Barra de búsqueda */}
+
         <div
           style={{
             display: "flex",
@@ -91,8 +91,7 @@ const Navbar = () => {
             }}
           />
         </div>
- 
-        {/* Íconos y enlaces */}
+
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           {isSeller && (
             <Link
@@ -106,8 +105,8 @@ const Navbar = () => {
               Tauler de Venedor
             </Link>
           )}
-          <IconButton color="inherit">
-            <Badge badgeContent={2} color="error">
+          <IconButton color="inherit" onClick={() => navigate("/cart")}>
+            <Badge badgeContent={cartCount} color="error">
               <ShoppingCart />
             </Badge>
           </IconButton>
@@ -136,5 +135,5 @@ const Navbar = () => {
     </AppBar>
   );
 };
- 
+
 export default Navbar;
