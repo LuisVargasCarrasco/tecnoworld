@@ -11,9 +11,9 @@ import {
   TextField,
 } from "@mui/material";
 import { Delete } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-  // Exemple de dades del carretó
   const [cartItems, setCartItems] = useState([
     {
       id: 1,
@@ -31,7 +31,8 @@ const Cart = () => {
     },
   ]);
 
-  // Funció per actualitzar la quantitat
+  const navigate = useNavigate();
+
   const updateQuantity = (id, quantity) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
@@ -40,12 +41,10 @@ const Cart = () => {
     );
   };
 
-  // Funció per eliminar un producte
   const removeItem = (id) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
-  // Càlcul del total
   const calculateTotal = () => {
     return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   };
@@ -101,7 +100,12 @@ const Cart = () => {
         <Typography variant="h5" gutterBottom>
           Total: €{calculateTotal()}
         </Typography>
-        <Button variant="contained" color="primary" size="large">
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={() => navigate("/checkout")}
+        >
           Procedir al Pagament
         </Button>
       </Box>
