@@ -61,7 +61,7 @@ const Cart = () => {
   };
 
   const handleCheckout = () => {
-    navigate("/checkout");
+    navigate("/checkout", { state: { cartItems } });
   };
 
   return (

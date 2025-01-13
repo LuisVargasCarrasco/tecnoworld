@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-import { db, auth } from "../firebaseConfig"; // Asegúrate de tener la configuración de Firebase
+import { useNavigate, useLocation } from "react-router-dom";
 
-const Checkout = ({ cartItems, onPlaceOrder }) => {
+const Checkout = () => {
+  const location = useLocation();
+  const { cartItems } = location.state;
   const [shippingDetails, setShippingDetails] = useState({
     name: "",
     address: "",
@@ -33,39 +33,15 @@ const Checkout = ({ cartItems, onPlaceOrder }) => {
 
   const handlePayment = async () => {
     if (!isShippingValid()) {
-      alert("Si us plau, completa totes les dades d'enviament.");
+      alert("Por favor, completa todos los datos de envío.");
       return;
     }
 
     setPaymentProcessing(true);
 
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        alert("Por favor, inicia sesión para realizar el pedido.");
-        setPaymentProcessing(false);
-        return;
-      }
-
-      // Guardar la orden en Firestore
-      await addDoc(collection(db, "orders"), {
-        ...shippingDetails,
-        items: cartItems,
-        total: calculateTotal(),
-        date: new Date(),
-        status: "Pending",
-        userId: currentUser.uid,
-      });
-
-      // Vaciar el carrito
-      const cartDocRef = doc(db, "carts", currentUser.uid);
-      await setDoc(cartDocRef, { items: [] });
-
-      // Llamar a la función onPlaceOrder para actualizar el estado del carrito en el componente padre
-      onPlaceOrder();
-
-      // Redirigir a la página de éxito
-      navigate("/success");
+      // Redirigir a la página de pago con los datos de envío y los artículos del carrito
+      navigate("/payment", { state: { cartItems, shippingDetails } });
     } catch (error) {
       console.error("Error al procesar el pago:", error);
       alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
@@ -113,7 +89,7 @@ const Checkout = ({ cartItems, onPlaceOrder }) => {
           onClick={handlePayment}
           disabled={paymentProcessing}
         >
-          {paymentProcessing ? <CircularProgress size={24} /> : "Realizar Pedido"}
+          {paymentProcessing ? <CircularProgress size={24} /> : "Proceder al Pago"}
         </Button>
       </Box>
     </Box>

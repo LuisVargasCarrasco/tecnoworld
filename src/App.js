@@ -4,6 +4,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import Authentication from "./components/Authentication";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
+import Payment from "./components/PagamentStripe_";
 import OrderHistory from "./components/OrderHistory";
 import ProductGrid from "./components/ProductGrid";
 import ProductDetails from "./components/ProductDetails";
@@ -66,7 +67,8 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/authentication" element={<Authentication />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout cartItems={cartItems} onPlaceOrder={handlePlaceOrder} />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment" element={<Payment />} />
           <Route path="/order-history" element={<OrderHistory />} />
         </Routes>
         <Footer />

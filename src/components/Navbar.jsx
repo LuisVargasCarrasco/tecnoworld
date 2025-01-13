@@ -1,136 +1,44 @@
-import React, { useEffect, useState } from "react";
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  InputBase,
-  IconButton,
-  Badge,
-  Link,
-  Button,
-} from "@mui/material";
-import { Search, ShoppingCart } from "@mui/icons-material";
-import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { AppBar, Toolbar, IconButton, Typography, Menu, MenuItem, Button } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-  const [isSeller, setIsSeller] = useState(false);
-  const [user, setUser] = useState(null);
-  const [cartCount, setCartCount] = useState(0);
-
-  const auth = getAuth();
-  const db = getFirestore();
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const currentUser = auth.currentUser;
-      setUser(currentUser);
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-      if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, "User", currentUser.uid));
-          if (userDoc.exists() && userDoc.data().role === "seller") {
-            setIsSeller(true);
-          } else {
-            setIsSeller(false);
-          }
-        } catch (error) {
-          console.error("Error accediendo al documento Firestore:", error);
-          setIsSeller(false);
-        }
-      }
-    };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
-    auth.onAuthStateChanged(() => {
-      checkAuth();
-    });
-  }, [auth, db]);
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    setUser(null);
-    setIsSeller(false);
-    navigate("/");
+  const handleNavigate = (path) => {
+    navigate(path);
+    handleMenuClose();
   };
 
   return (
-    <AppBar position="static" style={{ backgroundColor: "#232f3e" }}>
-      <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h6" style={{ fontWeight: "bold" }}>
-          <Link
-            href="/"
-            style={{
-              color: "white",
-              textDecoration: "none",
-              fontWeight: "bold",
-            }}
-          >
-            Mi Tienda
-          </Link>
+    <AppBar position="static">
+      <Toolbar>
+        <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuOpen}>
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Mi Tienda
         </Typography>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "#fff",
-            borderRadius: "5px",
-            padding: "0 10px",
-            width: "40%",
-          }}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
         >
-          <Search style={{ color: "#888" }} />
-          <InputBase
-            placeholder="Buscar productos"
-            style={{
-              marginLeft: "10px",
-              flex: 1,
-              fontSize: "14px",
-            }}
-          />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          {isSeller && (
-            <Link
-              href="/admin-dashboard"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Tauler de Venedor
-            </Link>
-          )}
-          <IconButton color="inherit" onClick={() => navigate("/cart")}>
-            <Badge badgeContent={cartCount} color="error">
-              <ShoppingCart />
-            </Badge>
-          </IconButton>
-          {user ? (
-            <Button
-              color="inherit"
-              onClick={handleSignOut}
-              style={{ fontWeight: "bold" }}
-            >
-              Tanca Sessió
-            </Button>
-          ) : (
-            <Link
-              href="/authentication"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Inicia Sessió
-            </Link>
-          )}
-        </div>
+          <MenuItem onClick={() => handleNavigate('/')}>Inicio</MenuItem>
+          <MenuItem onClick={() => handleNavigate('/order-history')}>Historial de Pedidos</MenuItem>
+          <MenuItem onClick={() => handleNavigate('/filter?type=price')}>Filtrar por Precios</MenuItem>
+          <MenuItem onClick={() => handleNavigate('/filter?type=category')}>Filtrar por Categorías</MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

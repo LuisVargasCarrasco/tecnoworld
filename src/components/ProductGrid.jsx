@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebaseConfig"; // Importa la configuración de Firestore
-import { collection, getDocs } from "firebase/firestore";
+import { db, auth } from "../firebaseConfig"; // Importa la configuración de Firestore y Auth
+import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import {
   Box,
   Grid,
@@ -8,6 +8,7 @@ import {
   CardMedia,
   CardContent,
   Typography,
+  Button,
   CircularProgress,
 } from "@mui/material";
 
@@ -34,6 +35,31 @@ const ProductGrid = () => {
 
     fetchProducts();
   }, []);
+
+  const handleAddToCart = async (product) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert("Por favor, inicia sesión para agregar productos al carrito.");
+      return;
+    }
+
+    const cartDocRef = doc(db, "carts", currentUser.uid);
+    const cartDoc = await getDoc(cartDocRef);
+
+    let cartItems = [];
+    if (cartDoc.exists()) {
+      cartItems = cartDoc.data().items;
+    }
+
+    const existingItemIndex = cartItems.findIndex((item) => item.id === product.id);
+    if (existingItemIndex > -1) {
+      cartItems[existingItemIndex].quantity += 1;
+    } else {
+      cartItems.push({ ...product, quantity: 1 });
+    }
+
+    await setDoc(cartDocRef, { items: cartItems });
+  };
 
   if (loading) {
     return (
@@ -76,6 +102,14 @@ const ProductGrid = () => {
                 <Typography variant="h6" sx={{ marginTop: "10px" }}>
                   €{product.price}
                 </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ marginTop: "10px" }}
+                  onClick={() => handleAddToCart(product)}
+                >
+                  Afegir al Carrito
+                </Button>
               </CardContent>
             </Card>
           </Grid>

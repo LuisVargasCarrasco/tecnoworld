@@ -1,67 +1,25 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CircularProgress,
-} from "@mui/material";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import React, { useEffect, useState } from 'react';
+import { Box, Typography, Card, CardContent } from '@mui/material';
+import { db, auth } from '../firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
-const OrderHistory = ({ userId }) => {
+const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const db = getFirestore();
-
-  // Carrega les comandes de l'usuari
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const ordersQuery = query(
-        collection(db, "orders"),
-        where("userId", "==", userId)
-      );
-      const querySnapshot = await getDocs(ordersQuery);
-      const ordersData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setOrders(ordersData);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    if (userId) {
-      fetchOrders();
-    }
-  }, [userId]);
+    const fetchOrders = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("userId", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        const ordersArray = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setOrders(ordersArray);
+      }
+    };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (orders.length === 0) {
-    return (
-      <Box sx={{ textAlign: "center", padding: "50px" }}>
-        <Typography variant="h6">No tens cap comanda registrada.</Typography>
-      </Box>
-    );
-  }
+    fetchOrders();
+  }, []);
 
   return (
     <Box sx={{ padding: "20px", maxWidth: "1200px", margin: "auto" }}>
