@@ -1,114 +1,114 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Grid,
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  IconButton,
-  Button,
-  TextField,
-} from "@mui/material";
-import { Delete } from "@mui/icons-material";
+import React, { useEffect, useState } from "react";
+import { db, auth } from "../firebaseConfig";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { Box, Typography, List, ListItem, ListItemText, IconButton, Divider, Paper, Button } from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Producte 1",
-      price: 100,
-      quantity: 1,
-      image: "https://via.placeholder.com/200",
-    },
-    {
-      id: 2,
-      name: "Producte 2",
-      price: 200,
-      quantity: 2,
-      image: "https://via.placeholder.com/200",
-    },
-  ]);
-
+  const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate();
 
-  const updateQuantity = (id, quantity) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: quantity > 0 ? quantity : 1 } : item
-      )
-    );
+  useEffect(() => {
+    const fetchCart = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const cartDocRef = doc(db, "carts", currentUser.uid);
+        const cartDoc = await getDoc(cartDocRef);
+        if (cartDoc.exists()) {
+          setCartItems(cartDoc.data().items);
+        }
+      }
+    };
+
+    fetchCart();
+  }, []);
+
+  const updateCart = async (updatedItems) => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      const cartDocRef = doc(db, "carts", currentUser.uid);
+      await setDoc(cartDocRef, { items: updatedItems });
+      setCartItems(updatedItems);
+    }
   };
 
-  const removeItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  const handleIncreaseQuantity = (productId) => {
+    const updatedItems = cartItems.map((item) => {
+      if (item.id === productId) {
+        return { ...item, quantity: item.quantity + 1 };
+      }
+      return item;
+    });
+    updateCart(updatedItems);
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const handleDecreaseQuantity = (productId) => {
+    const updatedItems = cartItems
+      .map((item) => {
+        if (item.id === productId) {
+          return { ...item, quantity: item.quantity - 1 };
+        }
+        return item;
+      })
+      .filter((item) => item.quantity > 0);
+    updateCart(updatedItems);
   };
 
-  if (cartItems.length === 0) {
-    return (
-      <Box sx={{ textAlign: "center", padding: "50px" }}>
-        <Typography variant="h5">El carretó està buit</Typography>
-      </Box>
-    );
-  }
+  const calculateTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2);
+  };
+
+  const handleCheckout = () => {
+    navigate("/checkout");
+  };
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "1200px", margin: "auto" }}>
-      <Typography variant="h4" gutterBottom>
-        El teu Carretó
-      </Typography>
-      <Grid container spacing={3}>
-        {cartItems.map((item) => (
-          <Grid item xs={12} key={item.id}>
-            <Card sx={{ display: "flex", alignItems: "center" }}>
-              <CardMedia
-                component="img"
-                image={item.image}
-                alt={item.name}
-                sx={{ width: "150px", objectFit: "cover" }}
-              />
-              <CardContent sx={{ flex: 1 }}>
-                <Typography variant="h6">{item.name}</Typography>
-                <Typography variant="body1">Preu: €{item.price}</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
-                  <Typography>Quantitat:</Typography>
-                  <TextField
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
-                    sx={{ width: "80px" }}
+    <Box sx={{ padding: "20px" }}>
+      <Typography variant="h4" sx={{ marginBottom: "20px" }}>Carrito</Typography>
+      <Paper elevation={3} sx={{ padding: "20px" }}>
+        <List>
+          {cartItems.length > 0 ? (
+            cartItems.map((item) => (
+              <React.Fragment key={item.id}>
+                <ListItem>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={`Cantidad: ${item.quantity} - Precio: €${(item.price * item.quantity).toFixed(2)}`}
                   />
-                </Box>
-              </CardContent>
-              <IconButton
-                color="error"
-                onClick={() => removeItem(item.id)}
-                sx={{ marginRight: "10px" }}
-              >
-                <Delete />
-              </IconButton>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Box sx={{ marginTop: "20px", textAlign: "right" }}>
-        <Typography variant="h5" gutterBottom>
-          Total: €{calculateTotal()}
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={() => navigate("/checkout")}
-        >
-          Procedir al Pagament
-        </Button>
-      </Box>
+                  <IconButton onClick={() => handleIncreaseQuantity(item.id)} color="primary">
+                    <AddIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDecreaseQuantity(item.id)} color="secondary">
+                    <RemoveIcon />
+                  </IconButton>
+                </ListItem>
+                <Divider />
+              </React.Fragment>
+            ))
+          ) : (
+            <Typography variant="h6" sx={{ textAlign: "center", marginTop: "20px" }}>
+              Tu carrito está vacío.
+            </Typography>
+          )}
+        </List>
+        {cartItems.length > 0 && (
+          <>
+            <Typography variant="h6" sx={{ marginTop: "20px", textAlign: "right" }}>
+              Precio Total: €{calculateTotalPrice()}
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: "20px", float: "right" }}
+              onClick={handleCheckout}
+            >
+              Proceder al Pago
+            </Button>
+          </>
+        )}
+      </Paper>
     </Box>
   );
 };

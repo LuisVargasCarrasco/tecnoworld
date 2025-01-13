@@ -8,7 +8,6 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  Button,
   CircularProgress,
 } from "@mui/material";
 
@@ -22,7 +21,7 @@ const ProductGrid = () => {
       try {
         const querySnapshot = await getDocs(collection(db, "product")); // Cambia "product" por el nombre exacto de tu colección
         const productsArray = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
+          id: doc.id, // Asegúrate de que el id se maneje como string
           ...doc.data(),
         }));
         setProducts(productsArray);
@@ -77,13 +76,6 @@ const ProductGrid = () => {
                 <Typography variant="h6" sx={{ marginTop: "10px" }}>
                   €{product.price}
                 </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ marginTop: "10px" }}
-                >
-                  Comprar ahora
-                </Button>
               </CardContent>
             </Card>
           </Grid>
