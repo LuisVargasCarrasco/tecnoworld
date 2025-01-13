@@ -12,29 +12,21 @@ import {
   CircularProgress,
 } from "@mui/material";
 
-const ProductGrid = () => {
+const ProductGrid = ({ priceRange }) => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const querySnapshot = await getDocs(collection(db, "product")); // Cambia "product" por el nombre exacto de tu colección
-        const productsArray = querySnapshot.docs.map((doc) => ({
-          id: doc.id, // Asegúrate de que el id se maneje como string
-          ...doc.data(),
-        }));
-        setProducts(productsArray);
-      } catch (error) {
-        console.error("Error obteniendo los productos:", error);
-      } finally {
-        setLoading(false);
-      }
+      const productsCollection = collection(db, 'product');
+      const productsSnapshot = await getDocs(productsCollection);
+      const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setProducts(productsList);
     };
 
     fetchProducts();
   }, []);
+
+  const filteredProducts = products.filter(product => product.price >= priceRange[0] && product.price <= priceRange[1]);
 
   const handleAddToCart = async (product) => {
     const currentUser = auth.currentUser;
@@ -61,25 +53,10 @@ const ProductGrid = () => {
     await setDoc(cartDocRef, { items: cartItems });
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ padding: "20px" }}>
       <Grid container spacing={3}>
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <Grid item xs={12} sm={6} md={4} key={product.id}>
             <Card>
               <CardMedia

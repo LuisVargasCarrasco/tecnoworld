@@ -11,7 +11,8 @@ import ProductDetails from "./components/ProductDetails";
 import Banner from "./components/Banner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { Box, CssBaseline } from "@mui/material";
+import PriceFilter from "./components/PriceFilter";
+import { Box, CssBaseline, Grid } from "@mui/material";
 import { db, auth } from "./firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -20,6 +21,7 @@ const Cancel = () => <h1>El pagament s'ha cancel·lat.</h1>;
 
 const App = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [priceRange, setPriceRange] = useState([1, 100000]);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -40,6 +42,10 @@ const App = () => {
     setCartItems([]);
   };
 
+  const handlePriceChange = (newPriceRange) => {
+    setPriceRange(newPriceRange);
+  };
+
   return (
     <Router>
       <Box
@@ -55,10 +61,15 @@ const App = () => {
           <Route
             path="/"
             element={
-              <>
-                <Banner />
-                <ProductGrid />
-              </>
+              <Grid container>
+                <Grid item xs={3}>
+                  <PriceFilter onPriceChange={handlePriceChange} />
+                </Grid>
+                <Grid item xs={9}>
+                  <Banner />
+                  <ProductGrid priceRange={priceRange} />
+                </Grid>
+              </Grid>
             }
           />
           <Route path="/product/:id" element={<ProductDetails />} />
