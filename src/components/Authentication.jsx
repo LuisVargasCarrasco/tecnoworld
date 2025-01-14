@@ -5,6 +5,7 @@ import {
   Button,
   Typography,
   Alert,
+  Link,
 } from "@mui/material";
 import {
   getAuth,
@@ -45,12 +46,13 @@ const Authentication = () => {
           password
         );
         const user = userCredential.user;
-
-        await setDoc(doc(db, "User", user.uid), {
+        await setDoc(doc(db, "userProfiles", user.uid), {
           email: user.email,
-          role: isSeller ? "seller" : "user",
+          displayName: "",
+          photoURL: "",
+          birthDate: "",
+          defaultAddress: "",
         });
-
         setUser(user);
       } else {
         const userCredential = await signInWithEmailAndPassword(
@@ -58,151 +60,100 @@ const Authentication = () => {
           email,
           password
         );
-        const user = userCredential.user;
-
-        const userDoc = await getDoc(doc(db, "User", user.uid));
-        if (userDoc.exists()) {
-          const role = userDoc.data().role;
-          setIsSeller(role === "seller");
-        }
-
-        setUser(user);
+        setUser(userCredential.user);
       }
-
       navigate("/");
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      setError(error.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-
-      const userDocRef = doc(db, "User", user.uid);
-      await setDoc(userDocRef, { email: user.email, role: "user" }, { merge: true });
-
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const role = userDoc.data().role;
-        setIsSeller(role === "seller");
+      const userProfileRef = doc(db, "userProfiles", user.uid);
+      const userProfileDoc = await getDoc(userProfileRef);
+      if (!userProfileDoc.exists()) {
+        await setDoc(userProfileRef, {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          birthDate: "",
+          defaultAddress: "",
+        });
       }
-
       setUser(user);
-
       navigate("/");
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      setError(error.message);
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut(auth);
-    setUser(null);
-    setIsSeller(false);
-  };
-
   return (
-    <Box
-      sx={{
-        padding: "20px",
-        maxWidth: "400px",
-        margin: "auto",
-        textAlign: "center",
-        marginTop: "50px",
-      }}
-    >
-      {user ? (
-        <Box>
-          <Typography variant="h6">
-            Bienvenido, {user.email} {isSeller && "(Vendedor)"}
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ marginTop: "20px" }}
-            onClick={handleSignOut}
-          >
-            Cerrar Sesión
-          </Button>
-        </Box>
-      ) : (
-        <Box>
-          <Typography variant="h5" gutterBottom>
-            {isSignUp ? "Registro" : "Inicia Sesión"}
-          </Typography>
-          {error && (
-            <Alert severity="error" sx={{ marginBottom: "20px" }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            label="Correo Electrónico"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            fullWidth
-            sx={{ marginBottom: "15px" }}
-          />
-          {isSignUp && (
-            <TextField
-              label="Confirmar Correo Electrónico"
-              type="email"
-              value={confirmEmail}
-              onChange={(e) => setConfirmEmail(e.target.value)}
-              fullWidth
-              sx={{ marginBottom: "15px" }}
-            />
-          )}
-          <TextField
-            label="Contraseña"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            fullWidth
-            sx={{ marginBottom: "20px" }}
-          />
-          {isSignUp && (
-            <Typography variant="body2">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={isSeller}
-                  onChange={() => setIsSeller(!isSeller)}
-                />
-                Registrarme como vendedor
-              </label>
-            </Typography>
-          )}
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleSubmit}
-          >
-            {isSignUp ? "Regístrate" : "Inicia Sesión"}
-          </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            fullWidth
-            sx={{ marginTop: "15px" }}
-            onClick={handleGoogleSignIn}
-          >
-            Inicia Sesión con Google
-          </Button>
-          <Typography
-            variant="body2"
-            sx={{ marginTop: "20px", cursor: "pointer" }}
-            onClick={() => setIsSignUp(!isSignUp)}
-          >
-            {isSignUp
-              ? "¿Ya tienes una cuenta? Inicia sesión."
-              : "¿No tienes una cuenta? Regístrate."}
-          </Typography>
-        </Box>
+    <Box sx={{ padding: "20px" }}>
+      <Typography variant="h4" sx={{ marginBottom: "20px", textAlign: "center" }}>
+        {isSignUp ? "Registro" : "Iniciar Sesión"}
+      </Typography>
+      {error && <Alert severity="error">{error}</Alert>}
+      <TextField
+        fullWidth
+        label="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        sx={{ marginBottom: "20px" }}
+      />
+      {isSignUp && (
+        <TextField
+          fullWidth
+          label="Confirmar Email"
+          value={confirmEmail}
+          onChange={(e) => setConfirmEmail(e.target.value)}
+          sx={{ marginBottom: "20px" }}
+        />
+      )}
+      <TextField
+        fullWidth
+        label="Contraseña"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        sx={{ marginBottom: "20px" }}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        onClick={handleSubmit}
+        sx={{ marginBottom: "20px" }}
+      >
+        {isSignUp ? "Registrarse" : "Iniciar Sesión"}
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        fullWidth
+        onClick={handleGoogleSignIn}
+        sx={{ marginBottom: "20px" }}
+      >
+        Iniciar Sesión con Google
+      </Button>
+      <Typography variant="body2" sx={{ textAlign: "center" }}>
+        {isSignUp ? "¿Ya tienes una cuenta?" : "¿No tienes una cuenta?"}{" "}
+        <Link
+          component="button"
+          variant="body2"
+          onClick={() => setIsSignUp(!isSignUp)}
+        >
+          {isSignUp ? "Iniciar Sesión" : "Registrarse"}
+        </Link>
+      </Typography>
+      {user && (
+        <Typography variant="body2" sx={{ textAlign: "center", marginTop: "20px" }}>
+          <Link href="/user-profile" color="inherit" underline="none">
+            Ir a Perfil de Usuario
+          </Link>
+        </Typography>
       )}
     </Box>
   );

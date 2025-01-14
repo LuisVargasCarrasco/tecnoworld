@@ -11,10 +11,11 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
+import { Search, ShoppingCart, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import UserMenu from "./UserMenu";
 
 const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
@@ -48,7 +49,20 @@ const Navbar = () => {
   }, [auth, db]);
 
   // Contador del carrito
+  useEffect(() => {
+    if (user) {
+      const cartRef = doc(db, "carts", user.uid);
+      const unsubscribeCart = onSnapshot(cartRef, (doc) => {
+        if (doc.exists()) {
+          const items = doc.data().items;
+          const count = items.reduce((total, item) => total + item.quantity, 0);
+          setCartCount(count);
+        }
+      });
 
+      return () => unsubscribeCart();
+    }
+  }, [user, db]);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -87,7 +101,7 @@ const Navbar = () => {
                 fontWeight: "bold",
               }}
             >
-              Mi Tienda
+              Tecnoworld
             </Link>
           </Typography>
         </div>
@@ -156,27 +170,8 @@ const Navbar = () => {
               <ShoppingCart />
             </Badge>
           </IconButton>
-          {/* Botón de sesión */}
-          {user ? (
-            <Button
-              color="inherit"
-              onClick={handleSignOut}
-              style={{ fontWeight: "bold" }}
-            >
-              Cerrar Sesión
-            </Button>
-          ) : (
-            <Link
-              href="/authentication"
-              style={{
-                color: "white",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
-              Iniciar Sesión
-            </Link>
-          )}
+          {/* Menú de usuario */}
+          <UserMenu user={user} onSignOut={handleSignOut} />
         </div>
       </Toolbar>
     </AppBar>

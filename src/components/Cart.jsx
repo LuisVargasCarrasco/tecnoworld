@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "../firebaseConfig";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { Box, Typography, List, ListItem, ListItemText, IconButton, Divider, Paper, Button } from "@mui/material";
+import { Box, Typography, List, ListItem, ListItemText, IconButton, Divider, Paper, Button, CardMedia } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useNavigate } from "react-router-dom";
@@ -72,7 +72,13 @@ const Cart = () => {
           {cartItems.length > 0 ? (
             cartItems.map((item) => (
               <React.Fragment key={item.id}>
-                <ListItem>
+                <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                  <CardMedia
+                    component="img"
+                    image={item.imageURL}
+                    alt={item.name}
+                    sx={{ width: 100, height: 100, objectFit: "contain", marginRight: "20px" }}
+                  />
                   <ListItemText
                     primary={item.name}
                     secondary={`Cantidad: ${item.quantity} - Precio: €${(item.price * item.quantity).toFixed(2)}`}

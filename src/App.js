@@ -12,6 +12,8 @@ import Banner from "./components/Banner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PriceFilter from "./components/PriceFilter";
+import CategoryFilter from "./components/CategoryFilter";
+import UserProfile from "./components/UserProfile";
 import { Box, CssBaseline, Grid } from "@mui/material";
 import { db, auth } from "./firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -22,6 +24,7 @@ const Cancel = () => <h1>El pagament s'ha cancel·lat.</h1>;
 const App = () => {
   const [cartItems, setCartItems] = useState([]);
   const [priceRange, setPriceRange] = useState([1, 100000]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -46,6 +49,10 @@ const App = () => {
     setPriceRange(newPriceRange);
   };
 
+  const handleCategoryChange = (newSelectedCategories) => {
+    setSelectedCategories(newSelectedCategories);
+  };
+
   return (
     <Router>
       <Box
@@ -61,13 +68,14 @@ const App = () => {
           <Route
             path="/"
             element={
-              <Grid container>
+              <Grid container spacing={2}>
                 <Grid item xs={3}>
                   <PriceFilter onPriceChange={handlePriceChange} />
+                  <CategoryFilter onCategoryChange={handleCategoryChange} />
                 </Grid>
                 <Grid item xs={9}>
                   <Banner />
-                  <ProductGrid priceRange={priceRange} />
+                  <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
                 </Grid>
               </Grid>
             }
@@ -77,6 +85,7 @@ const App = () => {
           <Route path="/cancel" element={<Cancel />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/authentication" element={<Authentication />} />
+          <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />

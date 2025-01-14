@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, FormControl, FormControlLabel, Checkbox } from '@mui/material';
-import { collection, getDocs } from 'firebase/firestore';
+import React, { useEffect, useState } from "react";
+import { Box, Typography, FormControl, FormControlLabel, Checkbox } from "@mui/material";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from '../firebaseConfig';
 
 const CategoryFilter = ({ onCategoryChange }) => {
@@ -34,7 +34,7 @@ const CategoryFilter = ({ onCategoryChange }) => {
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
+    <Box sx={{ padding: "20px", backgroundColor: "#f5f5f5", borderRadius: "5px" }}>
       <Typography variant="h6" gutterBottom>
         Filtrar por Categoría
       </Typography>
