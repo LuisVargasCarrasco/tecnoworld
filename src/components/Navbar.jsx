@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
@@ -26,30 +26,29 @@ const Navbar = () => {
   const db = getFirestore();
   const navigate = useNavigate();
 
+  // Autenticación y rol de usuario
   useEffect(() => {
-    const checkAuth = async () => {
-      const currentUser = auth.currentUser;
+    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
+      setIsSeller(false);
 
       if (currentUser) {
-        try {
-          const userDoc = await getDoc(doc(db, "User", currentUser.uid));
-          if (userDoc.exists() && userDoc.data().role === "seller") {
-            setIsSeller(true);
-          } else {
-            setIsSeller(false);
-          }
-        } catch (error) {
-          console.error("Error accediendo al documento Firestore:", error);
-          setIsSeller(false);
-        }
+        const userRef = doc(db, "User", currentUser.uid);
+        getDoc(userRef)
+          .then((userDoc) => {
+            if (userDoc.exists() && userDoc.data().role === "seller") {
+              setIsSeller(true);
+            }
+          })
+          .catch((error) => console.error("Error obteniendo datos del usuario:", error));
       }
-    };
-
-    auth.onAuthStateChanged(() => {
-      checkAuth();
     });
+
+    return () => unsubscribeAuth();
   }, [auth, db]);
+
+  // Contador del carrito
+
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -74,6 +73,7 @@ const Navbar = () => {
   return (
     <AppBar position="static" style={{ backgroundColor: "#232f3e" }}>
       <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
+        {/* Logo y Menú */}
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuOpen}>
             <MenuIcon />
@@ -97,10 +97,13 @@ const Navbar = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-          <MenuItem onClick={() => handleNavigate('/')}>Inicio</MenuItem>
-          <MenuItem onClick={() => handleNavigate('/order-history')}>Historial de Pedidos</MenuItem>
+          <MenuItem onClick={() => handleNavigate("/")}>Inicio</MenuItem>
+          <MenuItem onClick={() => handleNavigate("/order-history")}>
+            Historial de Pedidos
+          </MenuItem>
         </Menu>
 
+        {/* Barra de búsqueda */}
         <div
           style={{
             display: "flex",
@@ -122,6 +125,7 @@ const Navbar = () => {
           />
         </div>
 
+        {/* Controles de usuario */}
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           {isSeller && (
             <Link
@@ -132,21 +136,34 @@ const Navbar = () => {
                 fontWeight: "bold",
               }}
             >
-              Tauler de Venedor
+              Panel de Vendedor
             </Link>
           )}
+          {/* Ícono del carrito con contador */}
           <IconButton color="inherit" onClick={() => navigate("/cart")}>
-            <Badge badgeContent={cartCount} color="error">
+            <Badge
+              badgeContent={cartCount}
+              color="error"
+              showZero
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "12px",
+                  minWidth: "16px",
+                  height: "16px",
+                },
+              }}
+            >
               <ShoppingCart />
             </Badge>
           </IconButton>
+          {/* Botón de sesión */}
           {user ? (
             <Button
               color="inherit"
               onClick={handleSignOut}
               style={{ fontWeight: "bold" }}
             >
-              Tanca Sessió
+              Cerrar Sesión
             </Button>
           ) : (
             <Link
@@ -157,7 +174,7 @@ const Navbar = () => {
                 fontWeight: "bold",
               }}
             >
-              Inicia Sessió
+              Iniciar Sesión
             </Link>
           )}
         </div>
