@@ -7,13 +7,13 @@ import {
   IconButton,
   Badge,
   Link,
-  Button,
   Menu,
   MenuItem,
+  Avatar,
 } from "@mui/material";
-import { Search, ShoppingCart, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
+import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, collection, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
 
@@ -34,11 +34,14 @@ const Navbar = () => {
       setIsSeller(false);
 
       if (currentUser) {
-        const userRef = doc(db, "User", currentUser.uid);
+        const userRef = doc(db, "userProfiles", currentUser.uid);
         getDoc(userRef)
           .then((userDoc) => {
             if (userDoc.exists() && userDoc.data().role === "seller") {
               setIsSeller(true);
+            }
+            if (userDoc.exists()) {
+              setUser({ ...currentUser, ...userDoc.data() });
             }
           })
           .catch((error) => console.error("Error obteniendo datos del usuario:", error));
@@ -85,7 +88,7 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="static" style={{ backgroundColor: "#232f3e" }}>
+    <AppBar position="fixed" style={{ backgroundColor: "#232f3e" }}>
       <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
         {/* Logo y Menú */}
         <div style={{ display: "flex", alignItems: "center" }}>
