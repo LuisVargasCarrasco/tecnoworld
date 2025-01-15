@@ -14,10 +14,9 @@ import {
 } from "@mui/material";
 import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, onSnapshot, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
-import { useTheme } from "../ThemeContext";
 
 const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
@@ -29,7 +28,6 @@ const Navbar = () => {
   const auth = getAuth();
   const db = getFirestore();
   const navigate = useNavigate();
-  const { darkMode } = useTheme();
 
   // Autenticación y rol de usuario
   useEffect(() => {
@@ -95,25 +93,15 @@ const Navbar = () => {
     setSearchQuery(event.target.value);
   };
 
-  const handleSearchSubmit = async (event) => {
+  const handleSearchSubmit = (event) => {
     event.preventDefault();
     if (searchQuery.trim()) {
-      try {
-        const productsRef = collection(db, "products");
-        const q = query(productsRef, where("name", "==", searchQuery));
-        const querySnapshot = await getDocs(q);
-        const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Assuming you have a route to display search results
-        navigate("/search-results", { state: { products } });
-      } catch (error) {
-        console.error("Error searching products:", error);
-      }
+      navigate(`/search?query=${searchQuery}`);
     }
   };
 
   return (
-    <AppBar position="fixed" sx={{ backgroundColor: darkMode ? "#333" : "#1976d2" }}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#232f3e" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {/* Logo y Menú */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -152,13 +140,13 @@ const Navbar = () => {
           sx={{
             display: "flex",
             alignItems: "center",
-            backgroundColor: darkMode ? "#444" : "#fff",
+            backgroundColor: "#fff",
             borderRadius: "5px",
             padding: "0 10px",
             width: "40%",
           }}
         >
-          <Search sx={{ color: darkMode ? "#bbb" : "#888" }} />
+          <Search sx={{ color: "#888" }} />
           <InputBase
             placeholder="Buscar productos"
             value={searchQuery}
@@ -167,7 +155,6 @@ const Navbar = () => {
               ml: 1,
               flex: 1,
               fontSize: "14px",
-              color: darkMode ? "#fff" : "#000",
             }}
           />
         </Box>

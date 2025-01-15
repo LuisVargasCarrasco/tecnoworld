@@ -41,7 +41,7 @@ const Checkout = () => {
 
     try {
       // Redirigir a la página de pago con los datos de envío y los artículos del carrito
-      navigate("/payment", { state: { cartItems, shippingDetails } });
+      navigate("/PagmentStripe", { state: { cartItems, shippingDetails } });
     } catch (error) {
       console.error("Error al procesar el pago:", error);
       alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");

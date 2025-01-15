@@ -1,10 +1,12 @@
+// filepath: /src/App.js
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { motion } from "framer-motion";
 import AdminDashboard from "./components/AdminDashboard";
 import Authentication from "./components/Authentication";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
-import Payment from "./components/Payment";
+import Payment from "./components/PagamentStripe_";
 import OrderHistory from "./components/OrderHistory";
 import ProductGrid from "./components/ProductGrid";
 import ProductDetails from "./components/ProductDetails";
@@ -76,7 +78,13 @@ const App = () => {
                 </Grid>
                 <Grid item xs={9}>
                   <Banner />
-                  <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
+                  </motion.div>
                 </Grid>
               </Grid>
             }
@@ -89,7 +97,7 @@ const App = () => {
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/payment" element={<Payment />} />
+          <Route path="/PagmentStripe" element={<Payment />} />
           <Route path="/order-history" element={<OrderHistory />} />
           <Route path="/search-results" element={<SearchResults />} />
         </Routes>
