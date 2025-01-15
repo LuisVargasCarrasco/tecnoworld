@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { db, auth } from "../firebaseConfig";
-import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 import { Box, Grid, Card, CardMedia, CardContent, Typography, Button, CircularProgress } from "@mui/material";
 import { Link } from "react-router-dom";
 
-const ProductGrid = ({ priceRange }) => {
+const ProductGrid = ({ priceRange = [0, Infinity], selectedCategories = [] }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,32 +25,10 @@ const ProductGrid = ({ priceRange }) => {
     fetchProducts();
   }, []);
 
-  const filteredProducts = products.filter(product => product.price >= priceRange[0] && product.price <= priceRange[1]);
-
-  const handleAddToCart = async (product) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      alert("Por favor, inicia sesión para agregar productos al carrito.");
-      return;
-    }
-
-    const cartDocRef = doc(db, "carts", currentUser.uid);
-    const cartDoc = await getDoc(cartDocRef);
-
-    let cartItems = [];
-    if (cartDoc.exists()) {
-      cartItems = cartDoc.data().items;
-    }
-
-    const existingItemIndex = cartItems.findIndex((item) => item.id === product.id);
-    if (existingItemIndex > -1) {
-      cartItems[existingItemIndex].quantity += 1;
-    } else {
-      cartItems.push({ ...product, quantity: 1 });
-    }
-
-    await setDoc(cartDocRef, { items: cartItems });
-  };
+  const filteredProducts = products.filter(product => 
+    product.price >= priceRange[0] && product.price <= priceRange[1] &&
+    (selectedCategories.length === 0 || selectedCategories.includes(product.category))
+  );
 
   return (
     <Box sx={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
@@ -65,8 +43,8 @@ const ProductGrid = ({ priceRange }) => {
               <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
                 <CardMedia
                   component="img"
-                  image={product.imageURL}
-                  alt={product.name}
+                  image={product.imageURL || "/placeholder.jpg"} // Fallback en caso de que no haya imagen
+                  alt={product.name || "Producto"}
                   sx={{
                     objectFit: "contain",
                     objectPosition: "center",
@@ -75,12 +53,14 @@ const ProductGrid = ({ priceRange }) => {
                   }}
                 />
                 <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>{product.name}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    {product.name || "Producto sin nombre"}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ marginBottom: "10px" }}>
-                    {product.description}
+                    {product.description || "Sin descripción disponible."}
                   </Typography>
                   <Typography variant="h6" sx={{ marginTop: "10px", color: "#ff5722" }}>
-                    €{product.price}
+                    €{product.price !== undefined ? product.price : "N/A"}
                   </Typography>
                   <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
                     <Button
@@ -90,13 +70,6 @@ const ProductGrid = ({ priceRange }) => {
                       color="primary"
                     >
                       Ver Producto
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => handleAddToCart(product)}
-                    >
-                      Añadir al Carrito
                     </Button>
                   </Box>
                 </CardContent>

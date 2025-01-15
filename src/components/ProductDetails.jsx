@@ -1,87 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db, auth } from "../firebaseConfig";
-import { Box, Typography, Button, CardMedia, CircularProgress, TextField, List, ListItem, ListItemText } from "@mui/material";
+import { useParams } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { Box, Typography, CardMedia, CircularProgress } from "@mui/material";
 
 const ProductDetails = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [review, setReview] = useState("");
-  const [reviews, setReviews] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
-      const docRef = doc(db, "products", productId);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setProduct({ id: docSnap.id, ...docSnap.data() });
-        setReviews(docSnap.data().reviews || []);
-      } else {
-        console.log("No such document!");
+      try {
+        const docRef = doc(db, "product", productId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setProduct({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching product: ", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchProduct();
   }, [productId]);
-
-  const handleAddToCart = async (product) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      alert("Por favor, inicia sesión para agregar productos al carrito.");
-      return;
-    }
-
-    const cartDocRef = doc(db, "carts", currentUser.uid);
-    const cartDoc = await getDoc(cartDocRef);
-
-    let cartItems = [];
-    if (cartDoc.exists()) {
-      cartItems = cartDoc.data().items;
-    }
-
-    const existingItemIndex = cartItems.findIndex((item) => item.id === product.id);
-    if (existingItemIndex > -1) {
-      cartItems[existingItemIndex].quantity += 1;
-    } else {
-      cartItems.push({ ...product, quantity: 1 });
-    }
-
-    await setDoc(cartDocRef, { items: cartItems });
-  };
-
-  const handleBuyNow = async (product) => {
-    await handleAddToCart(product);
-    navigate("/cart");
-  };
-
-  const handleAddReview = async () => {
-    if (!review.trim()) return;
-
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      alert("Por favor, inicia sesión para escribir una reseña.");
-      return;
-    }
-
-    const productDocRef = doc(db, "products", productId);
-    await updateDoc(productDocRef, {
-      reviews: arrayUnion({
-        userId: currentUser.uid,
-        review,
-        date: new Date().toISOString(),
-      }),
-    });
-
-    setReviews((prevReviews) => [
-      ...prevReviews,
-      { userId: currentUser.uid, review, date: new Date().toISOString() },
-    ]);
-    setReview("");
-  };
 
   if (loading) {
     return (
@@ -106,52 +52,6 @@ const ProductDetails = () => {
       />
       <Typography variant="h6" sx={{ color: "#ff5722", marginBottom: "10px" }}>Precio: €{product.price}</Typography>
       <Typography variant="body1" sx={{ marginBottom: "20px" }}>{product.description}</Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => handleAddToCart(product)}
-        sx={{ width: "100%", padding: "10px", fontSize: "16px", marginBottom: "10px" }}
-      >
-        Añadir al Carrito
-      </Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={() => handleBuyNow(product)}
-        sx={{ width: "100%", padding: "10px", fontSize: "16px", marginBottom: "20px" }}
-      >
-        Comprar Ya
-      </Button>
-      <Box sx={{ marginTop: "20px" }}>
-        <Typography variant="h5" sx={{ marginBottom: "10px" }}>Reseñas</Typography>
-        <List>
-          {reviews.map((review, index) => (
-            <ListItem key={index}>
-              <ListItemText
-                primary={review.review}
-                secondary={new Date(review.date).toLocaleString()}
-              />
-            </ListItem>
-          ))}
-        </List>
-        <TextField
-          label="Escribe una reseña"
-          fullWidth
-          multiline
-          rows={4}
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
-          sx={{ marginTop: "10px" }}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddReview}
-          sx={{ marginTop: "10px" }}
-        >
-          Añadir Reseña
-        </Button>
-      </Box>
     </Box>
   );
 };
