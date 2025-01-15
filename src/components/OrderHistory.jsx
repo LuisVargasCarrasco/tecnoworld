@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Card, CardContent } from '@mui/material';
+import { Box, Typography, Card, CardContent, Divider, List, ListItem, ListItemText } from '@mui/material';
 import { db, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -22,29 +22,33 @@ const OrderHistory = () => {
   }, []);
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "1200px", margin: "auto" }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ padding: "20px", maxWidth: "1200px", margin: "auto", backgroundColor: "#f5f5f5", borderRadius: 2 }}>
+      <Typography variant="h4" gutterBottom sx={{ textAlign: "center", fontWeight: "bold" }}>
         Historial de Comandes
       </Typography>
       {orders.map((order) => (
-        <Card key={order.id} sx={{ marginBottom: "15px" }}>
+        <Card key={order.id} sx={{ marginBottom: "15px", boxShadow: 3 }}>
           <CardContent>
-            <Typography variant="body1">ID Comanda: {order.id}</Typography>
-            <Typography variant="body2">
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>ID Comanda: {order.id}</Typography>
+            <Typography variant="body2" color="textSecondary">
               Data: {new Date(order.date).toLocaleDateString()}
             </Typography>
-            <Typography variant="body2">Total: €{order.total}</Typography>
-            <Typography variant="body2">Estat: {order.status}</Typography>
-            <Typography variant="body2" sx={{ marginTop: "10px" }}>
+            <Typography variant="body2" color="textSecondary">Total: €{order.total}</Typography>
+            <Typography variant="body2" color="textSecondary">Estat: {order.status}</Typography>
+            <Divider sx={{ marginY: "10px" }} />
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
               Productes:
             </Typography>
-            <ul>
+            <List dense>
               {order.items.map((item, index) => (
-                <li key={index}>
-                  {item.name} - {item.quantity} unitats - €{item.price}
-                </li>
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={`${item.name} - ${item.quantity} unitats`}
+                    secondary={`€${item.price}`}
+                  />
+                </ListItem>
               ))}
-            </ul>
+            </List>
           </CardContent>
         </Card>
       ))}

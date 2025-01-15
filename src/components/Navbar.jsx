@@ -10,22 +10,26 @@ import {
   Menu,
   MenuItem,
   Avatar,
+  Box,
 } from "@mui/material";
 import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, getDoc, onSnapshot, collection, query, where, getDocs } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import UserMenu from "./UserMenu";
+import { useTheme } from "../ThemeContext";
 
 const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const auth = getAuth();
   const db = getFirestore();
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
 
   // Autenticación y rol de usuario
   useEffect(() => {
@@ -87,18 +91,39 @@ const Navbar = () => {
     handleMenuClose();
   };
 
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const handleSearchSubmit = async (event) => {
+    event.preventDefault();
+    if (searchQuery.trim()) {
+      try {
+        const productsRef = collection(db, "products");
+        const q = query(productsRef, where("name", "==", searchQuery));
+        const querySnapshot = await getDocs(q);
+        const products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Assuming you have a route to display search results
+        navigate("/search-results", { state: { products } });
+      } catch (error) {
+        console.error("Error searching products:", error);
+      }
+    }
+  };
+
   return (
-    <AppBar position="fixed" style={{ backgroundColor: "#232f3e" }}>
-      <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
+    <AppBar position="fixed" sx={{ backgroundColor: darkMode ? "#333" : "#1976d2" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {/* Logo y Menú */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
           <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuOpen}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" style={{ fontWeight: "bold" }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", ml: 1 }}>
             <Link
               href="/"
-              style={{
+              sx={{
                 color: "white",
                 textDecoration: "none",
                 fontWeight: "bold",
@@ -107,7 +132,7 @@ const Navbar = () => {
               Tecnoworld
             </Link>
           </Typography>
-        </div>
+        </Box>
 
         <Menu
           anchorEl={anchorEl}
@@ -121,33 +146,38 @@ const Navbar = () => {
         </Menu>
 
         {/* Barra de búsqueda */}
-        <div
-          style={{
+        <Box
+          component="form"
+          onSubmit={handleSearchSubmit}
+          sx={{
             display: "flex",
             alignItems: "center",
-            backgroundColor: "#fff",
+            backgroundColor: darkMode ? "#444" : "#fff",
             borderRadius: "5px",
             padding: "0 10px",
             width: "40%",
           }}
         >
-          <Search style={{ color: "#888" }} />
+          <Search sx={{ color: darkMode ? "#bbb" : "#888" }} />
           <InputBase
             placeholder="Buscar productos"
-            style={{
-              marginLeft: "10px",
+            value={searchQuery}
+            onChange={handleSearchChange}
+            sx={{
+              ml: 1,
               flex: 1,
               fontSize: "14px",
+              color: darkMode ? "#fff" : "#000",
             }}
           />
-        </div>
+        </Box>
 
         {/* Controles de usuario */}
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           {isSeller && (
             <Link
               href="/admin-dashboard"
-              style={{
+              sx={{
                 color: "white",
                 textDecoration: "none",
                 fontWeight: "bold",
@@ -175,7 +205,7 @@ const Navbar = () => {
           </IconButton>
           {/* Menú de usuario */}
           <UserMenu user={user} onSignOut={handleSignOut} />
-        </div>
+        </Box>
       </Toolbar>
     </AppBar>
   );

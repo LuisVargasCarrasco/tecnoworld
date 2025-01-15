@@ -4,7 +4,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import Authentication from "./components/Authentication";
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout";
-import Payment from "./components/PagamentStripe_";
+import Payment from "./components/Payment";
 import OrderHistory from "./components/OrderHistory";
 import ProductGrid from "./components/ProductGrid";
 import ProductDetails from "./components/ProductDetails";
@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 import PriceFilter from "./components/PriceFilter";
 import CategoryFilter from "./components/CategoryFilter";
 import UserProfile from "./components/UserProfile";
+import SearchResults from "./components/SearchResults";
 import { Box, CssBaseline, Grid } from "@mui/material";
 import { db, auth } from "./firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -70,8 +71,8 @@ const App = () => {
             element={
               <Grid container spacing={2}>
                 <Grid item xs={3}>
-                  <PriceFilter onPriceChange={handlePriceChange} />
                   <CategoryFilter onCategoryChange={handleCategoryChange} />
+                  <PriceFilter onPriceChange={handlePriceChange} />
                 </Grid>
                 <Grid item xs={9}>
                   <Banner />
@@ -80,7 +81,7 @@ const App = () => {
               </Grid>
             }
           />
-          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/product/:productId" element={<ProductDetails />} />
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -90,6 +91,7 @@ const App = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/order-history" element={<OrderHistory />} />
+          <Route path="/search-results" element={<SearchResults />} />
         </Routes>
         <Footer />
       </Box>

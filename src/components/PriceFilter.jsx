@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Slider } from "@mui/material";
+import { Box, Typography, Slider, Paper } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
@@ -7,21 +7,37 @@ const PriceFilter = ({ onPriceChange }) => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(1000);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPrices = async () => {
-      const productsCollection = collection(db, "product");
-      const productsSnapshot = await getDocs(productsCollection);
-      let min = Infinity;
-      let max = -Infinity;
-      productsSnapshot.docs.forEach((doc) => {
-        const product = doc.data();
-        if (product.price < min) min = product.price;
-        if (product.price > max) max = product.price;
-      });
-      setMinPrice(min === Infinity ? 0 : min);
-      setMaxPrice(max === -Infinity ? 1000 : max);
-      setPriceRange([min === Infinity ? 0 : min, max === -Infinity ? 1000 : max]);
+      try {
+        const productsCollection = collection(db, "product");
+        const productsSnapshot = await getDocs(productsCollection);
+        let min = Infinity;
+        let max = -Infinity;
+        productsSnapshot.docs.forEach((doc) => {
+          const product = doc.data();
+          if (product.price && typeof product.price === 'number') {
+            if (product.price < min) min = product.price;
+            if (product.price > max) max = product.price;
+          }
+        });
+        
+        min = min === Infinity ? 0 : Math.floor(min);
+        max = max === -Infinity ? 1000 : Math.ceil(max);
+        
+        setMinPrice(min);
+        setMaxPrice(max);
+        setPriceRange([min, max]);
+      } catch (error) {
+        console.error("Error fetching product prices:", error);
+        setMinPrice(0);
+        setMaxPrice(1000);
+        setPriceRange([0, 1000]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPrices();
@@ -32,9 +48,13 @@ const PriceFilter = ({ onPriceChange }) => {
     onPriceChange(newValue);
   };
 
+  if (loading) {
+    return <Typography>Cargando filtro de precios...</Typography>;
+  }
+
   return (
-    <Box sx={{ padding: "20px", backgroundColor: "#f5f5f5", borderRadius: "5px" }}>
-      <Typography variant="h5" gutterBottom>
+    <Paper elevation={3} sx={{ padding: "20px", borderRadius: "10px" }}>
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
         Filtrar por Precio
       </Typography>
       <Slider
@@ -43,25 +63,32 @@ const PriceFilter = ({ onPriceChange }) => {
         valueLabelDisplay="auto"
         min={minPrice}
         max={maxPrice}
-        step={10}
+        step={1}
         sx={{
           marginTop: "20px",
+          color: 'secondary.main',
           '& .MuiSlider-thumb': {
             width: 24,
             height: 24,
+            transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
+            '&:hover, &.Mui-focusVisible': {
+              boxShadow: '0px 0px 0px 8px rgb(255 64 129 / 16%)',
+            },
           },
           '& .MuiSlider-track': {
-            height: 8,
+            height: 4,
           },
           '& .MuiSlider-rail': {
-            height: 8,
+            height: 4,
+            opacity: 0.5,
+            backgroundColor: '#bfbfbf',
           },
         }}
       />
-      <Typography variant="body1">
+      <Typography variant="body1" sx={{ marginTop: 2, fontWeight: 'medium' }}>
         Rango de precio: €{priceRange[0]} - €{priceRange[1]}
       </Typography>
-    </Box>
+    </Paper>
   );
 };
 

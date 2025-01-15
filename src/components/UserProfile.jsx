@@ -6,6 +6,7 @@ import {
   Typography,
   Avatar,
   Grid,
+  Alert,
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
@@ -61,8 +62,8 @@ const UserProfile = () => {
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
-      <Typography variant="h4" sx={{ marginBottom: "20px", textAlign: "center" }}>
+    <Box sx={{ padding: "20px", maxWidth: "800px", margin: "auto", backgroundColor: "#f5f5f5", borderRadius: 2 }}>
+      <Typography variant="h4" sx={{ marginBottom: "20px", textAlign: "center", fontWeight: "bold" }}>
         Perfil de Usuario
       </Typography>
       <Grid container spacing={2}>
@@ -113,12 +114,12 @@ const UserProfile = () => {
           <Avatar src={photoURL} sx={{ width: 100, height: 100, margin: "auto" }} />
         </Grid>
       </Grid>
-      {error && <Typography color="error" sx={{ marginTop: "20px" }}>{error}</Typography>}
-      {success && <Typography color="success" sx={{ marginTop: "20px" }}>{success}</Typography>}
+      {error && <Alert severity="error" sx={{ marginTop: "20px" }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ marginTop: "20px" }}>{success}</Alert>}
       <Button
         variant="contained"
         color="primary"
-        sx={{ marginTop: "20px" }}
+        sx={{ marginTop: "20px", width: "100%", padding: "10px", fontSize: "16px" }}
         onClick={handleSave}
       >
         Guardar Cambios
