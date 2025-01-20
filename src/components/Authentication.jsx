@@ -27,6 +27,16 @@ const Authentication = () => {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
 
+  // Campos adicionales para vendedores
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [country, setCountry] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+
   const auth = getAuth();
   const db = getFirestore();
   const googleProvider = new GoogleAuthProvider();
@@ -46,23 +56,39 @@ const Authentication = () => {
           password
         );
         const user = userCredential.user;
-        await setDoc(doc(db, "userProfiles", user.uid), {
+        const userProfile = {
           email: user.email,
-          displayName: "",
-          photoURL: "",
-          birthDate: "",
-          defaultAddress: "",
-        });
+          role: isSeller ? "seller" : "user",
+        };
+        if (isSeller) {
+          userProfile.name = name;
+          userProfile.phone = phone;
+          userProfile.address = {
+            street,
+            city,
+            state,
+            zipCode,
+            country,
+          };
+          userProfile.profileImage = profileImage;
+        }
+        await setDoc(doc(db, "userProfiles", user.uid), userProfile);
         setUser(user);
+        navigate(isSeller ? "/seller-profile" : "/user-profile");
       } else {
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
           password
         );
-        setUser(userCredential.user);
+        const user = userCredential.user;
+        const userDoc = await getDoc(doc(db, "userProfiles", user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUser(user);
+          navigate(userData.role === "seller" ? "/seller-profile" : "/user-profile");
+        }
       }
-      navigate("/");
     } catch (error) {
       setError(error.message);
     }
@@ -72,89 +98,135 @@ const Authentication = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      const userProfileRef = doc(db, "userProfiles", user.uid);
-      const userProfileDoc = await getDoc(userProfileRef);
-      if (!userProfileDoc.exists()) {
-        await setDoc(userProfileRef, {
+      const userDoc = await getDoc(doc(db, "userProfiles", user.uid));
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, "userProfiles", user.uid), {
           email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          birthDate: "",
-          defaultAddress: "",
+          role: "user",
         });
       }
+      const userData = userDoc.data();
       setUser(user);
-      navigate("/");
+      navigate(userData.role === "seller" ? "/seller-profile" : "/user-profile");
     } catch (error) {
       setError(error.message);
     }
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
-      <Typography variant="h4" sx={{ marginBottom: "20px", textAlign: "center" }}>
-        {isSignUp ? "Registro" : "Iniciar Sesión"}
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        {isSignUp ? "Sign Up" : "Sign In"}
       </Typography>
       {error && <Alert severity="error">{error}</Alert>}
       <TextField
-        fullWidth
         label="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        sx={{ marginBottom: "20px" }}
+        fullWidth
+        margin="normal"
       />
       {isSignUp && (
         <TextField
-          fullWidth
-          label="Confirmar Email"
+          label="Confirm Email"
           value={confirmEmail}
           onChange={(e) => setConfirmEmail(e.target.value)}
-          sx={{ marginBottom: "20px" }}
+          fullWidth
+          margin="normal"
         />
       )}
       <TextField
-        fullWidth
-        label="Contraseña"
+        label="Password"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        sx={{ marginBottom: "20px" }}
+        fullWidth
+        margin="normal"
       />
-      <Button
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={handleSubmit}
-        sx={{ marginBottom: "20px" }}
-      >
-        {isSignUp ? "Registrarse" : "Iniciar Sesión"}
-      </Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        fullWidth
-        onClick={handleGoogleSignIn}
-        sx={{ marginBottom: "20px" }}
-      >
-        Iniciar Sesión con Google
-      </Button>
-      <Typography variant="body2" sx={{ textAlign: "center" }}>
-        {isSignUp ? "¿Ya tienes una cuenta?" : "¿No tienes una cuenta?"}{" "}
-        <Link
-          component="button"
-          variant="body2"
-          onClick={() => setIsSignUp(!isSignUp)}
-        >
-          {isSignUp ? "Iniciar Sesión" : "Registrarse"}
-        </Link>
-      </Typography>
-      {user && (
-        <Typography variant="body2" sx={{ textAlign: "center", marginTop: "20px" }}>
-          <Link href="/user-profile" color="inherit" underline="none">
-            Ir a Perfil de Usuario
-          </Link>
-        </Typography>
+      {isSignUp && (
+        <Box>
+          <Typography variant="body1">Are you a seller?</Typography>
+          <Button
+            variant={isSeller ? "contained" : "outlined"}
+            onClick={() => setIsSeller(!isSeller)}
+          >
+            {isSeller ? "Yes" : "No"}
+          </Button>
+          {isSeller && (
+            <Box>
+              <TextField
+                label="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Street"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="State"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Zip Code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Country"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Profile Image URL"
+                value={profileImage}
+                onChange={(e) => setProfileImage(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+            </Box>
+          )}
+        </Box>
       )}
+      <Button variant="contained" color="primary" onClick={handleSubmit}>
+        {isSignUp ? "Sign Up" : "Sign In"}
+      </Button>
+      <Button variant="contained" color="secondary" onClick={handleGoogleSignIn}>
+        Sign In with Google
+      </Button>
+      <Link
+        component="button"
+        variant="body2"
+        onClick={() => setIsSignUp(!isSignUp)}
+      >
+        {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+      </Link>
     </Box>
   );
 };

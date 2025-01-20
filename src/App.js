@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 import PriceFilter from "./components/PriceFilter";
 import CategoryFilter from "./components/CategoryFilter";
 import UserProfile from "./components/UserProfile";
+import SellerProfile from "./components/SellerProfile";
 import SearchResults from "./components/SearchResults";
 import Recommendations from "./components/Recommendations";
 import ChatBot from "./components/ChatBot";
@@ -83,6 +84,7 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/authentication" element={<Authentication />} />
           <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/seller-profile" element={<SellerProfile />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />

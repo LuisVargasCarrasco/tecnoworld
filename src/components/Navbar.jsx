@@ -13,7 +13,7 @@ import {
   Box,
 } from "@mui/material";
 import { Search as SearchIcon, ShoppingCart as ShoppingCartIcon, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
@@ -31,7 +31,7 @@ const Navbar = () => {
 
   // Autenticación y rol de usuario
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsSeller(false);
 
@@ -73,7 +73,7 @@ const Navbar = () => {
     await signOut(auth);
     setUser(null);
     setIsSeller(false);
-    navigate("/");
+    navigate("/authentication");
   };
 
   const handleMenuOpen = (event) => {
@@ -228,9 +228,15 @@ const Navbar = () => {
             open={Boolean(userMenuAnchorEl)}
             onClose={handleUserMenuClose}
           >
-            <MenuItem onClick={() => handleNavigate("/user-profile")}>Perfil</MenuItem>
-            <MenuItem onClick={() => handleNavigate("/order-history")}>Historial de Pedidos</MenuItem>
-            <MenuItem onClick={handleSignOut}>Cerrar sesión</MenuItem>
+            {user ? (
+              <>
+                <MenuItem onClick={() => handleNavigate(isSeller ? "/seller-profile" : "/user-profile")}>Perfil</MenuItem>
+                <MenuItem onClick={() => handleNavigate("/order-history")}>Historial de Pedidos</MenuItem>
+                <MenuItem onClick={handleSignOut}>Cerrar sesión</MenuItem>
+              </>
+            ) : (
+              <MenuItem onClick={() => handleNavigate("/authentication")}>Iniciar sesión</MenuItem>
+            )}
           </Menu>
         </Box>
       </Toolbar>
