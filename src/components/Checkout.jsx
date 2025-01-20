@@ -1,98 +1,120 @@
-import React, { useState } from "react";
-import { Box, TextField, Button, Typography, CircularProgress } from "@mui/material";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, TextField, Button, Paper, Container } from "@mui/material";
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
-  const location = useLocation();
-  const { cartItems } = location.state;
   const [shippingDetails, setShippingDetails] = useState({
     name: "",
     address: "",
     city: "",
     postalCode: "",
   });
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [step, setStep] = useState(1);
+
+  const auth = getAuth();
+  const db = getFirestore();
   const navigate = useNavigate();
 
-  const calculateTotal = () => {
-    return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2);
-  };
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const cartRef = doc(db, "carts", user.uid);
+        const cartDoc = await getDoc(cartRef);
+        if (cartDoc.exists()) {
+          setCartItems(cartDoc.data().items);
+        }
+      }
+    };
+
+    fetchCartItems();
+  }, [auth, db]);
 
   const handleChange = (e) => {
-    setShippingDetails({ ...shippingDetails, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setShippingDetails((prevDetails) => ({
+      ...prevDetails,
+      [name]: value,
+    }));
   };
 
-  const isShippingValid = () => {
-    return (
-      shippingDetails.name &&
-      shippingDetails.address &&
-      shippingDetails.city &&
-      shippingDetails.postalCode
-    );
+  const calculateTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   };
 
-  const handlePayment = async () => {
-    if (!isShippingValid()) {
-      alert("Por favor, completa todos los datos de envío.");
-      return;
-    }
+  const handleNextStep = () => {
+    setStep(step + 1);
+  };
 
-    setPaymentProcessing(true);
-
-    try {
-      // Redirigir a la página de pago con los datos de envío y los artículos del carrito
-      navigate("/PagmentStripe", { state: { cartItems, shippingDetails } });
-    } catch (error) {
-      console.error("Error al procesar el pago:", error);
-      alert("Error al procesar el pago. Por favor, inténtalo de nuevo.");
-    } finally {
-      setPaymentProcessing(false);
-    }
+  const handleProceedToPayment = () => {
+    navigate("/payment", { state: { cartItems, shippingDetails } });
   };
 
   return (
-    <Box sx={{ padding: "20px" }}>
-      <Typography variant="h4" sx={{ marginBottom: "20px" }}>Checkout</Typography>
-      <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <TextField
-          label="Nombre"
-          name="name"
-          value={shippingDetails.name}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          label="Dirección"
-          name="address"
-          value={shippingDetails.address}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          label="Ciudad"
-          name="city"
-          value={shippingDetails.city}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          label="Código Postal"
-          name="postalCode"
-          value={shippingDetails.postalCode}
-          onChange={handleChange}
-          required
-        />
-        <Typography variant="h6">Total: €{calculateTotal()}</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handlePayment}
-          disabled={paymentProcessing}
-        >
-          {paymentProcessing ? <CircularProgress size={24} /> : "Proceder al Pago"}
-        </Button>
-      </Box>
-    </Box>
+    <Container component="main" maxWidth="sm">
+      <Paper elevation={3} sx={{ padding: 3, marginTop: 8 }}>
+        <Typography variant="h4" sx={{ marginBottom: "20px" }} align="center">
+          Checkout
+        </Typography>
+        {step === 1 && (
+          <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <TextField
+              label="Nombre"
+              name="name"
+              value={shippingDetails.name}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Dirección"
+              name="address"
+              value={shippingDetails.address}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Ciudad"
+              name="city"
+              value={shippingDetails.city}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Código Postal"
+              name="postalCode"
+              value={shippingDetails.postalCode}
+              onChange={handleChange}
+              required
+              fullWidth
+            />
+            <Button variant="contained" color="primary" onClick={handleNextStep} fullWidth>
+              Siguiente
+            </Button>
+          </Box>
+        )}
+        {step === 2 && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Typography variant="h6" align="center">
+              Total: €{calculateTotal().toFixed(2)}
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleProceedToPayment}
+              fullWidth
+            >
+              Proceder al Pago
+            </Button>
+          </Box>
+        )}
+      </Paper>
+    </Container>
   );
 };
 

@@ -1,6 +1,6 @@
-import React from "react";
-import Slider from "react-slick";
-import { Box, Typography } from "@mui/material";
+import React from 'react';
+import Slider from 'react-slick';
+import { Box, Typography } from '@mui/material';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -13,11 +13,12 @@ const Banner = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 8000,
+    arrows: false, // Desactivar los botones de navegación
   };
 
   const banners = [
-    { id: 1, image: "/banner1.jpg"},
-    { id: 2, image: "/banner2.jpg" },
+    { id: 1, image: "/banner1.jpg", text: "" },
+    { id: 2, image: "/banner2.jpg", text: "" },
   ];
 
   return (
@@ -26,6 +27,7 @@ const Banner = () => {
         <Box
           key={banner.id}
           sx={{
+            marginTop: "6vh",
             position: "relative",
             width: "100%",
             height: "500px",

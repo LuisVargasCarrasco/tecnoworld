@@ -31,22 +31,20 @@ const Navbar = () => {
 
   // Autenticación y rol de usuario
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setIsSeller(false);
 
       if (currentUser) {
-        const userRef = doc(db, "userProfiles", currentUser.uid);
-        getDoc(userRef)
-          .then((userDoc) => {
-            if (userDoc.exists() && userDoc.data().role === "seller") {
-              setIsSeller(true);
-            }
-            if (userDoc.exists()) {
-              setUser({ ...currentUser, ...userDoc.data() });
-            }
-          })
-          .catch((error) => console.error("Error obteniendo datos del usuario:", error));
+        const userRef = doc(db, "User", currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.role === "seller") {
+            setIsSeller(true);
+          }
+          setUser({ ...currentUser, ...userData });
+        }
       }
     });
 
@@ -177,7 +175,7 @@ const Navbar = () => {
                 fontWeight: "bold",
               }}
             >
-              Panel de Vendedor
+              
             </Link>
           )}
           {/* Ícono del carrito con contador */}

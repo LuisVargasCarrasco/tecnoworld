@@ -67,8 +67,8 @@ const App = () => {
           <Route path="/" element={
             <Grid container spacing={2}>
               <Grid item xs={3}>
-                <CategoryFilter onCategoryChange={handleCategoryChange} />
                 <PriceFilter onPriceChange={handlePriceChange} />
+                <CategoryFilter onCategoryChange={handleCategoryChange} />
               </Grid>
               <Grid item xs={9}>
                 <Banner />

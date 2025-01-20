@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Box, Typography, List, ListItem, ListItemText, Button, CircularProgress, CardMedia, Paper } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { Box, Typography, List, ListItem, ListItemText, Button, CircularProgress, CardMedia, Paper, Grid } from '@mui/material';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { db, auth } from '../firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 const stripePromise = loadStripe('pk_test_51QfQpxLBN9lGC0Ys8wMm8gYfOaHLIVoSEViR61tr3qdaz7i8OMAJYM7QdLZU8Crj25Uu7HRJmNdGTp2M8gSP5JAb00FTgx1511');
 
@@ -54,8 +54,8 @@ const PaymentForm = ({ cartItems, shippingDetails, onPaymentSuccess }) => {
             onPaymentSuccess();
 
         } catch (error) {
-            console.error('Error durant el procés de pagament:', error);
-            alert('No s\'ha pogut completar el pagament.');
+            console.error('Error durante el proceso de pago:', error);
+            alert('No se ha podido completar el pago.');
         } finally {
             setLoading(false);
         }
@@ -66,41 +66,59 @@ const PaymentForm = ({ cartItems, shippingDetails, onPaymentSuccess }) => {
     };
 
     return (
-        <Box sx={{ padding: "20px" }}>
-            <Typography variant="h4" sx={{ marginBottom: "20px" }}>Resumen del Pedido</Typography>
-            <List>
-                {cartItems.map((item) => (
-                    <ListItem key={item.id}>
-                        <ListItemText
-                            primary={item.name}
-                            secondary={`Cantidad: ${item.quantity} - Precio: €${(item.price * item.quantity).toFixed(2)}`}
-                        />
-                    </ListItem>
-                ))}
-            </List>
-            <Typography variant="h6" sx={{ marginTop: "20px" }}>
-                Precio Total: €{calculateTotal()}
-            </Typography>
-            <Typography variant="h6" sx={{ marginTop: "20px" }}>
-                Envío a: {shippingDetails.name}, {shippingDetails.address}, {shippingDetails.city}, {shippingDetails.postalCode}
-            </Typography>
-            <form onSubmit={handlePayment} style={{ marginTop: "20px" }}>
-                <CardElement />
-                <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    disabled={loading || !stripe || !elements}
-                    sx={{ marginTop: "20px" }}
-                >
-                    {loading ? <CircularProgress size={24} /> : 'Pagar ahora'}
-                </Button>
-            </form>
-        </Box>
+        <Grid container spacing={4} sx={{ padding: "20px", marginTop: "80px" }}>
+            <Grid item xs={12} md={6}>
+                <Paper elevation={3} sx={{ padding: "20px" }}>
+                    <Typography variant="h5" sx={{ marginBottom: "20px" }}>Información de Pago</Typography>
+                    <form onSubmit={handlePayment}>
+                        <CardElement options={{ style: { base: { fontSize: '18px' } } }} />
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            disabled={loading || !stripe || !elements}
+                            sx={{ marginTop: "20px" }}
+                            fullWidth
+                        >
+                            {loading ? <CircularProgress size={24} /> : 'Pagar ahora'}
+                        </Button>
+                    </form>
+                </Paper>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <Paper elevation={3} sx={{ padding: "20px" }}>
+                    <Typography variant="h5" sx={{ marginBottom: "20px" }}>Resumen del Pedido</Typography>
+                    <List>
+                        {cartItems.map((item) => (
+                            <ListItem key={item.id} sx={{ display: "flex", alignItems: "center" }}>
+                                <CardMedia
+                                    component="img"
+                                    image={item.imageURL}
+                                    alt={item.name}
+                                    sx={{ width: 100, height: 100, objectFit: "contain", marginRight: "20px" }}
+                                />
+                                <ListItemText
+                                    primary={item.name}
+                                    secondary={`Cantidad: ${item.quantity} - Precio: €${(item.price * item.quantity).toFixed(2)}`}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                    <Typography variant="h6" sx={{ marginTop: "20px" }}>
+                        Precio Total: €{calculateTotal()}
+                    </Typography>
+                    <Typography variant="h6" sx={{ marginTop: "20px" }}>
+                        Envío a: {shippingDetails.name}, {shippingDetails.address}, {shippingDetails.city}, {shippingDetails.postalCode}
+                    </Typography>
+                </Paper>
+            </Grid>
+        </Grid>
     );
 };
 
 const Confirmation = ({ cartItems, shippingDetails }) => {
+    const navigate = useNavigate();
+
     const calculateTotal = () => {
         return cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0).toFixed(2);
     };
@@ -113,8 +131,20 @@ const Confirmation = ({ cartItems, shippingDetails }) => {
         return deliveryDate.toLocaleDateString();
     };
 
+    const handleReturnHome = async () => {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            // Vaciar el carrito
+            const cartRef = doc(db, "carts", currentUser.uid);
+            await updateDoc(cartRef, {
+                items: []
+            });
+        }
+        navigate("/");
+    };
+
     return (
-        <Box sx={{ padding: "20px" }}>
+        <Box sx={{ padding: "20px", marginTop: "80px" }}>
             <Typography variant="h4" sx={{ marginBottom: "20px" }}>Confirmación del Pedido</Typography>
             <Paper elevation={3} sx={{ padding: "20px" }}>
                 <List>
@@ -142,6 +172,14 @@ const Confirmation = ({ cartItems, shippingDetails }) => {
                 <Typography variant="h6" sx={{ marginTop: "20px" }}>
                     Fecha estimada de entrega: {getRandomDeliveryDate()}
                 </Typography>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    sx={{ marginTop: "20px" }}
+                    onClick={handleReturnHome}
+                >
+                    Volver al inicio
+                </Button>
             </Paper>
         </Box>
     );
@@ -149,8 +187,15 @@ const Confirmation = ({ cartItems, shippingDetails }) => {
 
 const Payment = () => {
     const location = useLocation();
-    const { cartItems, shippingDetails } = location.state;
+    const navigate = useNavigate();
+    const { cartItems, shippingDetails } = location.state || {};
+
     const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+    if (!cartItems || !shippingDetails) {
+        navigate("/cart");
+        return null;
+    }
 
     const handlePaymentSuccess = () => {
         setPaymentSuccess(true);

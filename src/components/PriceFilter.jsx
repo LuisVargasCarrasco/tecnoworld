@@ -48,46 +48,24 @@ const PriceFilter = ({ onPriceChange }) => {
     onPriceChange(newValue);
   };
 
-  if (loading) {
-    return <Typography>Cargando filtro de precios...</Typography>;
-  }
-
   return (
-    <Paper elevation={3} sx={{ padding: "20px", borderRadius: "10px" }}>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+    <Paper elevation={3} sx={{ padding: "20px", marginTop: "80px", backgroundColor: "#f5f5f5", borderRadius: "5px" }}>
+      <Typography variant="h6" gutterBottom>
         Filtrar por Precio
       </Typography>
-      <Slider
-        value={priceRange}
-        onChange={handlePriceChange}
-        valueLabelDisplay="auto"
-        min={minPrice}
-        max={maxPrice}
-        step={1}
-        sx={{
-          marginTop: "20px",
-          color: 'secondary.main',
-          '& .MuiSlider-thumb': {
-            width: 24,
-            height: 24,
-            transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
-            '&:hover, &.Mui-focusVisible': {
-              boxShadow: '0px 0px 0px 8px rgb(255 64 129 / 16%)',
-            },
-          },
-          '& .MuiSlider-track': {
-            height: 4,
-          },
-          '& .MuiSlider-rail': {
-            height: 4,
-            opacity: 0.5,
-            backgroundColor: '#bfbfbf',
-          },
-        }}
-      />
-      <Typography variant="body1" sx={{ marginTop: 2, fontWeight: 'medium' }}>
-        Rango de precio: €{priceRange[0]} - €{priceRange[1]}
-      </Typography>
+      <Box sx={{ width: "100%", marginTop: "20px" }}>
+        <Slider
+          value={priceRange}
+          onChange={handlePriceChange}
+          valueLabelDisplay="auto"
+          min={minPrice}
+          max={maxPrice}
+          disabled={loading}
+        />
+        <Typography variant="body2" color="textSecondary">
+          Rango de precios: €{priceRange[0]} - €{priceRange[1]}
+        </Typography>
+      </Box>
     </Paper>
   );
 };

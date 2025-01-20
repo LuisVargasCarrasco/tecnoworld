@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Button, TextField, Card, CardContent, Avatar } from "@mui/material";
-import { getAuth, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { getAuth, signOut, deleteUser } from "firebase/auth";
+import { getFirestore, doc, getDoc, collection, addDoc, getDocs, query, where, deleteDoc, writeBatch } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const SellerProfile = () => {
@@ -9,7 +9,8 @@ const SellerProfile = () => {
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productDescription, setProductDescription] = useState("");
-  const [productImageUrl, setProductImageUrl] = useState("");
+  const [imageURL, setImageURL] = useState("");
+  const [category, setCategory] = useState("");
   const [products, setProducts] = useState([]);
 
   const auth = getAuth();
@@ -20,7 +21,7 @@ const SellerProfile = () => {
     const fetchSellerInfo = async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDoc = await getDoc(doc(db, "userProfiles", user.uid));
+        const userDoc = await getDoc(doc(db, "sellerProfiles", user.uid));
         if (userDoc.exists()) {
           setSellerInfo(userDoc.data());
         }
@@ -30,7 +31,7 @@ const SellerProfile = () => {
     const fetchProducts = async () => {
       const user = auth.currentUser;
       if (user) {
-        const q = query(collection(db, "products"), where("sellerId", "==", user.uid));
+        const q = query(collection(db, "product"), where("sellerId", "==", user.uid));
         const productsSnapshot = await getDocs(q);
         const productsList = productsSnapshot.docs.map(doc => doc.data());
         setProducts(productsList);
@@ -43,28 +44,55 @@ const SellerProfile = () => {
 
   const handleSignOut = async () => {
     await signOut(auth);
-    navigate("/");
+    navigate("/authentication");
   };
 
   const handleAddProduct = async () => {
     const user = auth.currentUser;
     if (user) {
-      await addDoc(collection(db, "products"), {
+      await addDoc(collection(db, "product"), {
         name: productName,
         price: productPrice,
         description: productDescription,
-        imageUrl: productImageUrl,
+        imageURL: imageURL,
+        category: category,
         sellerId: user.uid,
       });
       setProductName("");
       setProductPrice("");
       setProductDescription("");
-      setProductImageUrl("");
+      setImageURL("");
+      setCategory("");
       // Llamar a fetchProducts después de agregar un producto
-      const q = query(collection(db, "products"), where("sellerId", "==", user.uid));
+      const q = query(collection(db, "product"), where("sellerId", "==", user.uid));
       const productsSnapshot = await getDocs(q);
       const productsList = productsSnapshot.docs.map(doc => doc.data());
       setProducts(productsList);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      // Eliminar productos del vendedor
+      const q = query(collection(db, "product"), where("sellerId", "==", user.uid));
+      const productsSnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      productsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
+      // Eliminar perfil del vendedor
+      await deleteDoc(doc(db, "sellerProfiles", user.uid));
+
+      // Eliminar usuario de la colección User
+      await deleteDoc(doc(db, "User", user.uid));
+
+      // Eliminar cuenta de autenticación
+      await deleteUser(user);
+
+      navigate("/authentication");
     }
   };
 
@@ -113,8 +141,15 @@ const SellerProfile = () => {
       />
       <TextField
         label="URL de la Imagen del Producto"
-        value={productImageUrl}
-        onChange={(e) => setProductImageUrl(e.target.value)}
+        value={imageURL}
+        onChange={(e) => setImageURL(e.target.value)}
+        fullWidth
+        margin="normal"
+      />
+      <TextField
+        label="Categoría del Producto"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
         fullWidth
         margin="normal"
       />
@@ -122,7 +157,10 @@ const SellerProfile = () => {
         Añadir Producto
       </Button>
       <Button variant="contained" color="secondary" onClick={handleSignOut} sx={{ mt: 2 }}>
-        Sign Out
+        Cerrar Sesión
+      </Button>
+      <Button variant="contained" color="error" onClick={handleDeleteAccount} sx={{ mt: 2 }}>
+        Eliminar Cuenta
       </Button>
       <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
         Tus Productos
@@ -133,7 +171,8 @@ const SellerProfile = () => {
             <Typography variant="h6">Nombre: {product.name}</Typography>
             <Typography variant="h6">Precio: {product.price}</Typography>
             <Typography variant="h6">Descripcion: {product.description}</Typography>
-            <img src={product.imageUrl} alt={product.name} style={{ width: "100%", height: "auto" }} />
+            <Typography variant="h6">Categoría: {product.category}</Typography>
+            <img src={product.imageURL} alt={product.name} style={{ width: "100%", height: "auto" }} />
           </CardContent>
         </Card>
       ))}

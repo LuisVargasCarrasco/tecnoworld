@@ -1,128 +1,72 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Avatar,
-  Grid,
-  Alert,
-} from "@mui/material";
-import { getAuth } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { Box, Typography, Button, TextField, Card, CardContent, Avatar } from "@mui/material";
+import { getAuth, signOut, deleteUser } from "firebase/auth";
+import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
-  const [displayName, setDisplayName] = useState("");
-  const [photoURL, setPhotoURL] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [defaultAddress, setDefaultAddress] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
 
   const auth = getAuth();
   const db = getFirestore();
-  const user = auth.currentUser;
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserInfo = async () => {
+      const user = auth.currentUser;
       if (user) {
-        const userProfileRef = doc(db, "userProfiles", user.uid);
-        const userProfileDoc = await getDoc(userProfileRef);
-        if (userProfileDoc.exists()) {
-          const data = userProfileDoc.data();
-          setDisplayName(data.displayName || "");
-          setPhotoURL(data.photoURL || "");
-          setBirthDate(data.birthDate || "");
-          setDefaultAddress(data.defaultAddress || "");
-          setEmail(data.email || user.email);
+        const userDoc = await getDoc(doc(db, "userProfiles", user.uid));
+        if (userDoc.exists()) {
+          setUserInfo(userDoc.data());
         }
       }
     };
 
-    fetchUserProfile();
-  }, [user, db]);
+    fetchUserInfo();
+  }, [auth, db]);
 
-  const handleSave = async () => {
-    setError(null);
-    setSuccess(null);
-    try {
-      const userProfileRef = doc(db, "userProfiles", user.uid);
-      await setDoc(userProfileRef, {
-        displayName,
-        photoURL,
-        birthDate,
-        defaultAddress,
-        email,
-      });
-      setSuccess("Perfil actualizado con éxito");
-    } catch (error) {
-      setError("Error actualizando el perfil: " + error.message);
+  const handleSignOut = async () => {
+    await signOut(auth);
+    navigate("/authentication");
+  };
+
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      // Eliminar perfil del usuario
+      await deleteDoc(doc(db, "userProfiles", user.uid));
+
+      // Eliminar usuario de la colección User
+      await deleteDoc(doc(db, "User", user.uid));
+
+      // Eliminar cuenta de autenticación
+      await deleteUser(user);
+
+      navigate("/authentication");
     }
   };
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "800px", margin: "auto", backgroundColor: "#f5f5f5", borderRadius: 2 }}>
-      <Typography variant="h4" sx={{ marginBottom: "20px", textAlign: "center", fontWeight: "bold" }}>
-        Perfil de Usuario
+    <Box sx={{ padding: "20px", maxWidth: "800px", margin: "auto" }}>
+      <Typography variant="h4" gutterBottom>
+        User Profile
       </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Nombre de Usuario"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Fecha de Nacimiento"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Dirección Predeterminada"
-            value={defaultAddress}
-            onChange={(e) => setDefaultAddress(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="URL de la Foto de Perfil"
-            value={photoURL}
-            onChange={(e) => setPhotoURL(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <Avatar src={photoURL} sx={{ width: 100, height: 100, margin: "auto" }} />
-        </Grid>
-      </Grid>
-      {error && <Alert severity="error" sx={{ marginTop: "20px" }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ marginTop: "20px" }}>{success}</Alert>}
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ marginTop: "20px", width: "100%", padding: "10px", fontSize: "16px" }}
-        onClick={handleSave}
-      >
-        Guardar Cambios
+      {userInfo && (
+        <Card sx={{ marginBottom: "20px" }}>
+          <CardContent>
+            <Avatar src={userInfo.photoURL} alt="Profile Image" sx={{ width: 100, height: 100, marginBottom: 2 }} />
+            <Typography variant="h6">Nombre: {userInfo.displayName}</Typography>
+            <Typography variant="h6">Email: {userInfo.email}</Typography>
+            <Typography variant="h6">Fecha de Nacimiento: {userInfo.birthDate}</Typography>
+            <Typography variant="h6">Dirección Predeterminada: {userInfo.defaultAddress}</Typography>
+          </CardContent>
+        </Card>
+      )}
+      <Button variant="contained" color="secondary" onClick={handleSignOut} sx={{ mt: 2 }}>
+        Cerrar Sesión
+      </Button>
+      <Button variant="contained" color="error" onClick={handleDeleteAccount} sx={{ mt: 2 }}>
+        Eliminar Cuenta
       </Button>
     </Box>
   );
