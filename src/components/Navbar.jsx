@@ -12,17 +12,17 @@ import {
   Avatar,
   Box,
 } from "@mui/material";
-import { Search, ShoppingCart, Menu as MenuIcon } from "@mui/icons-material";
+import { Search as SearchIcon, ShoppingCart as ShoppingCartIcon, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
 import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import UserMenu from "./UserMenu";
 
 const Navbar = () => {
   const [isSeller, setIsSeller] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const auth = getAuth();
@@ -80,13 +80,22 @@ const Navbar = () => {
     setAnchorEl(event.currentTarget);
   };
 
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchorEl(event.currentTarget);
+  };
+
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchorEl(null);
   };
 
   const handleNavigate = (path) => {
     navigate(path);
     handleMenuClose();
+    handleUserMenuClose();
   };
 
   const handleSearchChange = (event) => {
@@ -96,7 +105,7 @@ const Navbar = () => {
   const handleSearchSubmit = (event) => {
     event.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?query=${searchQuery}`);
+      navigate(`/search-results?query=${searchQuery}`);
     }
   };
 
@@ -128,9 +137,7 @@ const Navbar = () => {
           onClose={handleMenuClose}
         >
           <MenuItem onClick={() => handleNavigate("/")}>Inicio</MenuItem>
-          <MenuItem onClick={() => handleNavigate("/order-history")}>
-            Historial de Pedidos
-          </MenuItem>
+          <MenuItem onClick={() => handleNavigate("/recommendations")}>Recomendaciones</MenuItem>
         </Menu>
 
         {/* Barra de búsqueda */}
@@ -146,7 +153,7 @@ const Navbar = () => {
             width: "40%",
           }}
         >
-          <Search sx={{ color: "#888" }} />
+          <SearchIcon sx={{ color: "#888" }} />
           <InputBase
             placeholder="Buscar productos"
             value={searchQuery}
@@ -187,11 +194,44 @@ const Navbar = () => {
                 },
               }}
             >
-              <ShoppingCart />
+              <ShoppingCartIcon />
             </Badge>
           </IconButton>
           {/* Menú de usuario */}
-          <UserMenu user={user} onSignOut={handleSignOut} />
+          <IconButton
+            size="large"
+            edge="end"
+            aria-label="account of current user"
+            aria-controls="user-menu-appbar"
+            aria-haspopup="true"
+            onClick={handleUserMenuOpen}
+            color="inherit"
+          >
+            {user && user.photoURL ? (
+              <Avatar src={user.photoURL} alt="profile picture" />
+            ) : (
+              <AccountCircle />
+            )}
+          </IconButton>
+          <Menu
+            id="user-menu-appbar"
+            anchorEl={userMenuAnchorEl}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(userMenuAnchorEl)}
+            onClose={handleUserMenuClose}
+          >
+            <MenuItem onClick={() => handleNavigate("/user-profile")}>Perfil</MenuItem>
+            <MenuItem onClick={() => handleNavigate("/order-history")}>Historial de Pedidos</MenuItem>
+            <MenuItem onClick={handleSignOut}>Cerrar sesión</MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>

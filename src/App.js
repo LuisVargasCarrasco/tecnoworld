@@ -1,4 +1,3 @@
-// filepath: /src/App.js
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -17,6 +16,8 @@ import PriceFilter from "./components/PriceFilter";
 import CategoryFilter from "./components/CategoryFilter";
 import UserProfile from "./components/UserProfile";
 import SearchResults from "./components/SearchResults";
+import Recommendations from "./components/Recommendations";
+import ChatBot from "./components/ChatBot";
 import { Box, CssBaseline, Grid } from "@mui/material";
 import { db, auth } from "./firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -58,37 +59,24 @@ const App = () => {
 
   return (
     <Router>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <CssBaseline />
         <Navbar />
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Grid container spacing={2}>
-                <Grid item xs={3}>
-                  <CategoryFilter onCategoryChange={handleCategoryChange} />
-                  <PriceFilter onPriceChange={handlePriceChange} />
-                </Grid>
-                <Grid item xs={9}>
-                  <Banner />
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
-                  </motion.div>
-                </Grid>
+          <Route path="/" element={
+            <Grid container spacing={2}>
+              <Grid item xs={3}>
+                <CategoryFilter onCategoryChange={handleCategoryChange} />
+                <PriceFilter onPriceChange={handlePriceChange} />
               </Grid>
-            }
-          />
+              <Grid item xs={9}>
+                <Banner />
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                  <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
+                </motion.div>
+              </Grid>
+            </Grid>
+          } />
           <Route path="/product/:productId" element={<ProductDetails />} />
           <Route path="/success" element={<Success />} />
           <Route path="/cancel" element={<Cancel />} />
@@ -97,11 +85,13 @@ const App = () => {
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/PagmentStripe" element={<Payment />} />
+          <Route path="/payment" element={<Payment />} />
           <Route path="/order-history" element={<OrderHistory />} />
           <Route path="/search-results" element={<SearchResults />} />
+          <Route path="/recommendations" element={<Recommendations />} />
         </Routes>
         <Footer />
+        <ChatBot />
       </Box>
     </Router>
   );
