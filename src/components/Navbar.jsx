@@ -42,8 +42,15 @@ const Navbar = () => {
           const userData = userDoc.data();
           if (userData.role === "seller") {
             setIsSeller(true);
+            const sellerProfileRef = doc(db, "sellerProfiles", currentUser.uid);
+            const sellerProfileDoc = await getDoc(sellerProfileRef);
+            if (sellerProfileDoc.exists()) {
+              const sellerProfileData = sellerProfileDoc.data();
+              setUser({ ...currentUser, ...userData, ...sellerProfileData });
+            }
+          } else {
+            setUser({ ...currentUser, ...userData });
           }
-          setUser({ ...currentUser, ...userData });
         }
       }
     });
@@ -207,6 +214,8 @@ const Navbar = () => {
           >
             {user && user.photoURL ? (
               <Avatar src={user.photoURL} alt="profile picture" />
+            ) : user && user.profileImage ? (
+              <Avatar src={user.profileImage} alt="profile picture" />
             ) : (
               <AccountCircle />
             )}

@@ -52,7 +52,7 @@ const Authentication = () => {
   const handleSubmit = async () => {
     setError(null);
     if (isSignUp && email !== confirmEmail) {
-      setError("Emails do not match");
+      setError("Los correos no coinciden");
       return;
     }
     try {
@@ -91,7 +91,7 @@ const Authentication = () => {
           role: isSeller ? "seller" : "user",
         });
         setUser(user);
-        navigate(isSeller ? "/seller-profile" : "/user-profile");
+        navigate("/");
       } else {
         const userCredential = await signInWithEmailAndPassword(
           auth,
@@ -103,7 +103,7 @@ const Authentication = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setUser(user);
-          navigate(userData.role === "seller" ? "/seller-profile" : "/user-profile");
+          navigate("/");
         }
       }
     } catch (error) {
@@ -124,7 +124,7 @@ const Authentication = () => {
       }
       const userData = userDoc.data();
       setUser(user);
-      navigate(userData.role === "seller" ? "/seller-profile" : "/user-profile");
+      navigate("/");
     } catch (error) {
       setError(error.message);
     }
@@ -134,7 +134,7 @@ const Authentication = () => {
     <Container component="main" maxWidth="xs" sx={{marginBottom: 8, marginTop: 8 }}>
       <Paper elevation={3} sx={{ padding: 3, marginTop: 8 }}>
         <Typography variant="h4" gutterBottom align="center">
-          {isSignUp ? "Sign Up" : "Sign In"}
+          {isSignUp ? "Registro" : "Inicio de sesion"}
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
         <TextField
@@ -146,7 +146,7 @@ const Authentication = () => {
         />
         {isSignUp && (
           <TextField
-            label="Confirm Email"
+            label="Confirma el correo"
             value={confirmEmail}
             onChange={(e) => setConfirmEmail(e.target.value)}
             fullWidth
@@ -154,7 +154,7 @@ const Authentication = () => {
           />
         )}
         <TextField
-          label="Password"
+          label="Contraseña"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -261,7 +261,7 @@ const Authentication = () => {
           </Box>
         )}
         <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth sx={{ mt: 2 }}>
-          {isSignUp ? "Inicia sesion" : "Registrate"}
+          {isSignUp ? "Registrate" : "Inicia sesion"}
         </Button>
         <Button variant="contained" color="secondary" onClick={handleGoogleSignIn} fullWidth sx={{ mt: 2 }}>
           Inicia sesion con Google
