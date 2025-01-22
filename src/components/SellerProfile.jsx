@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 const SellerProfile = () => {
   const [sellerInfo, setSellerInfo] = useState(null);
   const [productName, setProductName] = useState("");
-  const [productPrice, setProductPrice] = useState("");
+  const [productPrice, setProductPrice] = useState([]);
   const [productDescription, setProductDescription] = useState("");
   const [imageURL, setImageURL] = useState("");
   const [category, setCategory] = useState("");

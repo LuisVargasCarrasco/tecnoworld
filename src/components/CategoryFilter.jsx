@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, FormControl, FormControlLabel, Checkbox, Paper } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from '../firebaseConfig';
 
 const CategoryFilter = ({ onCategoryChange }) => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -24,36 +24,41 @@ const CategoryFilter = ({ onCategoryChange }) => {
     fetchCategories();
   }, []);
 
-  const handleCategoryChange = (event) => {
-    const category = event.target.name;
-    const newSelectedCategories = event.target.checked
-      ? [...selectedCategories, category]
-      : selectedCategories.filter(c => c !== category);
-    setSelectedCategories(newSelectedCategories);
-    onCategoryChange(newSelectedCategories);
+  const handleCategoryClick = (category) => {
+    const newSelectedCategory = selectedCategory === category ? null : category;
+    setSelectedCategory(newSelectedCategory);
+    onCategoryChange(newSelectedCategory ? [newSelectedCategory] : categories);
+  };
+
+  const handleShowAll = () => {
+    setSelectedCategory(null);
+    onCategoryChange(categories);
   };
 
   return (
-    <Paper elevation={3} sx={{ padding: "20px", marginTop: "20px", backgroundColor: "#f5f5f5", borderRadius: "5px" }}>
-      <Typography variant="h6" gutterBottom>
-        Categorias
-      </Typography>
-      <FormControl component="fieldset">
-        {categories.map((category) => (
-          <FormControlLabel
-            key={category}
-            control={
-              <Checkbox
-                checked={selectedCategories.includes(category)}
-                onChange={handleCategoryChange}
-                name={category}
-              />
-            }
-            label={category}
-          />
-        ))}
-      </FormControl>
-    </Paper>
+    <Box sx={{ width: "80%", marginLeft:"20px", marginTop: "5px" }}>
+      {categories.map((category) => (
+        <Typography
+          key={category}
+          variant="body1"
+          sx={{
+            cursor: "pointer",
+            color: selectedCategory === category ? "primary.main" : "text.primary",
+            fontWeight: selectedCategory === category ? "bold" : "normal",
+            marginBottom: "10px",
+            '&:hover': {
+              color: 'blue',
+            },
+          }}
+          onClick={() => handleCategoryClick(category)}
+        >
+          {category}
+        </Typography>
+      ))}
+      <Button variant="contained" color="primary" onClick={handleShowAll} sx={{ marginTop: "10px" }}>
+        Mostrar todo
+      </Button>
+    </Box>
   );
 };
 

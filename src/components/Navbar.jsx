@@ -11,19 +11,27 @@ import {
   MenuItem,
   Avatar,
   Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
-import { Search as SearchIcon, ShoppingCart as ShoppingCartIcon, Menu as MenuIcon, AccountCircle } from "@mui/icons-material";
+import { Search as SearchIcon, ShoppingCart as ShoppingCartIcon, Menu as MenuIcon, Home as HomeIcon, Star as StarIcon, FilterList as FilterListIcon, Category as CategoryIcon, AccountCircle } from "@mui/icons-material";
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import PriceFilter from "./PriceFilter";
+import CategoryFilter from "./CategoryFilter";
 
-const Navbar = () => {
+const Navbar = ({ onPriceChange, onCategoryChange }) => {
   const [isSeller, setIsSeller] = useState(false);
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -114,12 +122,57 @@ const Navbar = () => {
     }
   };
 
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setDrawerOpen(open);
+  };
+
+  const sidebarContent = (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={toggleDrawer(false)}
+      onKeyDown={toggleDrawer(false)}
+    >
+      <List>
+        <ListItem button onClick={() => handleNavigate("/")}>
+          <ListItemIcon>
+            <HomeIcon />
+          </ListItemIcon>
+          <ListItemText primary="Inicio" />
+        </ListItem>
+        <ListItem button onClick={() => handleNavigate("/recommendations")}>
+          <ListItemIcon>
+            <StarIcon />
+          </ListItemIcon>
+          <ListItemText primary="Recomendaciones" />
+        </ListItem>
+        <ListItem>
+          <ListItemIcon>
+            <FilterListIcon />
+          </ListItemIcon>
+          <ListItemText primary="Filtros de Precio" />
+        </ListItem>
+        <PriceFilter onPriceChange={onPriceChange} />
+        <ListItem>
+          <ListItemIcon>
+            <CategoryIcon />
+          </ListItemIcon>
+          <ListItemText primary="Filtros de Categorías" />
+        </ListItem>
+        <CategoryFilter onCategoryChange={onCategoryChange} />
+      </List>
+    </Box>
+  );
+
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "#232f3e" }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {/* Logo y Menú */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton edge="start" color="inherit" aria-label="menu" onClick={handleMenuOpen}>
+          <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer(true)}>
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" sx={{ fontWeight: "bold", ml: 1 }}>
@@ -136,14 +189,13 @@ const Navbar = () => {
           </Typography>
         </Box>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={toggleDrawer(false)}
         >
-          <MenuItem onClick={() => handleNavigate("/")}>Inicio</MenuItem>
-          <MenuItem onClick={() => handleNavigate("/recommendations")}>Recomendaciones</MenuItem>
-        </Menu>
+          {sidebarContent}
+        </Drawer>
 
         {/* Barra de búsqueda */}
         <Box
@@ -212,9 +264,7 @@ const Navbar = () => {
             onClick={handleUserMenuOpen}
             color="inherit"
           >
-            {user && user.photoURL ? (
-              <Avatar src={user.photoURL} alt="profile picture" />
-            ) : user && user.profileImage ? (
+            {user && user.profileImage ? (
               <Avatar src={user.profileImage} alt="profile picture" />
             ) : (
               <AccountCircle />

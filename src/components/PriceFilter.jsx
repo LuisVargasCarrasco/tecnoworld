@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Slider, Paper } from "@mui/material";
+import { Box, Typography, Slider } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
@@ -20,7 +20,7 @@ const PriceFilter = ({ onPriceChange }) => {
           const product = doc.data();
           if (product.price && typeof product.price === 'number') {
             if (product.price < min) min = product.price;
-            if (product.price > max) max = product.price;
+            if (product.price > max) max = product.price + 1;
           }
         });
         
@@ -49,24 +49,19 @@ const PriceFilter = ({ onPriceChange }) => {
   };
 
   return (
-    <Paper elevation={3} sx={{ padding: "20px", marginTop: "80px", backgroundColor: "#f5f5f5", borderRadius: "5px" }}>
-      <Typography variant="h6" gutterBottom>
-        Filtrar por Precio
+    <Box sx={{ width: "80%", marginLeft:"20px", marginTop: "5px" }}>
+      <Slider
+        value={priceRange}
+        onChange={handlePriceChange}
+        valueLabelDisplay="auto"
+        min={minPrice}
+        max={maxPrice}
+        disabled={loading}
+      />
+      <Typography variant="body2" color="textSecondary">
+        Rango de precios: €{priceRange[0]} - €{priceRange[1]}
       </Typography>
-      <Box sx={{ width: "100%", marginTop: "20px" }}>
-        <Slider
-          value={priceRange}
-          onChange={handlePriceChange}
-          valueLabelDisplay="auto"
-          min={minPrice}
-          max={maxPrice}
-          disabled={loading}
-        />
-        <Typography variant="body2" color="textSecondary">
-          Rango de precios: €{priceRange[0]} - €{priceRange[1]}
-        </Typography>
-      </Box>
-    </Paper>
+    </Box>
   );
 };
 

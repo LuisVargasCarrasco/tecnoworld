@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { motion } from "framer-motion";
 import AdminDashboard from "./components/AdminDashboard";
 import Authentication from "./components/Authentication";
@@ -12,8 +12,6 @@ import ProductDetails from "./components/ProductDetails";
 import Banner from "./components/Banner";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import PriceFilter from "./components/PriceFilter";
-import CategoryFilter from "./components/CategoryFilter";
 import UserProfile from "./components/UserProfile";
 import SellerProfile from "./components/SellerProfile";
 import SearchResults from "./components/SearchResults";
@@ -21,15 +19,24 @@ import Recommendations from "./components/Recommendations";
 import ChatBot from "./components/ChatBot";
 import { Box, CssBaseline, Grid } from "@mui/material";
 import { db, auth } from "./firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
-
-const Success = () => <h1>Pagament completat!</h1>;
-const Cancel = () => <h1>El pagament s'ha cancel·lat.</h1>;
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 
 const App = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [priceRange, setPriceRange] = useState([1, 100000]);
+  const [products, setProducts] = useState([]);
+  const [priceRange, setPriceRange] = useState([0, 1000]);
   const [selectedCategories, setSelectedCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const productsCollection = collection(db, "product");
+      const productsSnapshot = await getDocs(productsCollection);
+      const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setProducts(productsList);
+    };
+
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -58,29 +65,27 @@ const App = () => {
     setSelectedCategories(newSelectedCategories);
   };
 
+  const handleAddToCart = (product) => {
+    setCartItems((prevItems) => [...prevItems, product]);
+  };
+
   return (
     <Router>
       <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <CssBaseline />
-        <Navbar />
+        <Navbar onPriceChange={handlePriceChange} onCategoryChange={handleCategoryChange} />
         <Routes>
           <Route path="/" element={
             <Grid container spacing={2}>
-              <Grid item xs={3}>
-                <PriceFilter onPriceChange={handlePriceChange} />
-                <CategoryFilter onCategoryChange={handleCategoryChange} />
-              </Grid>
-              <Grid item xs={9}>
+              <Grid item xs={12}>
                 <Banner />
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <ProductGrid priceRange={priceRange} selectedCategories={selectedCategories} />
+                  <ProductGrid products={products} priceRange={priceRange} selectedCategories={selectedCategories} />
                 </motion.div>
               </Grid>
             </Grid>
           } />
-          <Route path="/product/:productId" element={<ProductDetails />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/cancel" element={<Cancel />} />
+          <Route path="/product/:productId" element={<ProductDetails onAddToCart={handleAddToCart} />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/authentication" element={<Authentication />} />
           <Route path="/user-profile" element={<UserProfile />} />
@@ -92,8 +97,8 @@ const App = () => {
           <Route path="/search-results" element={<SearchResults />} />
           <Route path="/recommendations" element={<Recommendations />} />
         </Routes>
-        <Footer />
-        <ChatBot />
+        <ChatBot /> {/* Activar ChatBot */}
+        <Footer /> {/* Activar Footer */}
       </Box>
     </Router>
   );
