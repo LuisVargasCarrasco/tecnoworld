@@ -3,6 +3,7 @@ import { Box, Typography, Slider } from "@mui/material";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
+
 const PriceFilter = ({ onPriceChange }) => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [minPrice, setMinPrice] = useState(0);
